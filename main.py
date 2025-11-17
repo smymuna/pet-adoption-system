@@ -98,16 +98,11 @@ async def root(request: Request):
 
 
 if __name__ == "__main__":
-    import os
-    port = int(os.getenv("PORT", 5001))
-    reload = os.getenv("ENV", "development") == "development"
-    
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
-        port=port,
-        reload=reload,
-        log_level="info",
-        workers=1 if reload else 4  # Multiple workers in production
+        port=5001,
+        reload=True,
+        log_level="info"
     )
 
