@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}ML Predictions - Pet Adoption System{% endblock %}
+{% block page_title %}Machine Learning Predictions{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <button class="btn btn-primary" onclick="trainModels()">
+            <i class="bi bi-gear"></i> Train Models
+        </button>
+        <button class="btn btn-success" onclick="loadPredictions()">
+            <i class="bi bi-arrow-clockwise"></i> Refresh Predictions
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Adoption Predictions for Available Animals</h5>
+                <div id="predictionsContainer">
+                    <p class="text-muted">Click "Refresh Predictions" to load predictions</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+async function trainModels() {
+    const btn = event.target;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Training...';
+    
+    try {
+        const response = await fetch('/api/ml/train', {
+            method: 'POST'
+        });
+        const result = await response.json();
+        
+        if (response.ok) {
+            showAlert('Models trained successfully!', 'success');
+            loadPredictions();
+        } else {
+            showAlert('Training failed: ' + (result.detail || 'Unknown error'), 'danger');
+        }
+    } catch (error) {
+        showAlert('Error training models: ' + error.message, 'danger');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-gear"></i> Train Models';
+    }
+}
+
+async function loadPredictions() {
+    const container = document.getElementById('predictionsContainer');
+    container.innerHTML = '<p class="text-muted">Loading predictions...</p>';
+    
+    try {
+        const response = await fetch('/api/ml/predictions');
+        const predictions = await response.json();
+        
+        if (predictions.length === 0) {
+            container.innerHTML = '<p class="text-muted">No predictions available. Train models first.</p>';
+            return;
+        }
+        
+        let html = '<table class="table table-striped"><thead><tr><th>Animal Name</th><th>Species</th><th>Adoption Likelihood (%)</th><th>Time to Adoption (days)</th></tr></thead><tbody>';
+        predictions.forEach(pred => {
+            html += `<tr>
+                <td>${pred.name}</td>
+                <td>${pred.species}</td>
+                <td>${pred.adoption_likelihood !== null ? pred.adoption_likelihood + '%' : 'N/A'}</td>
+                <td>${pred.time_to_adoption_days !== null ? pred.time_to_adoption_days : 'N/A'}</td>
+            </tr>`;
+        });
+        html += '</tbody></table>';
+        container.innerHTML = html;
+    } catch (error) {
+        container.innerHTML = '<p class="text-danger">Error loading predictions: ' + error.message + '</p>';
+    }
+}
+
+// Load predictions on page load
+loadPredictions();
+</script>
+{% endblock %}
+

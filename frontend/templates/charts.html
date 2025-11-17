@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Charts - Pet Adoption System{% endblock %}
+{% block page_title %}Data Visualization{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Animal Species Distribution</h5>
+                <canvas id="speciesChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Monthly Adoption Numbers</h5>
+                <canvas id="adoptionsChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+async function loadCharts() {
+    // Species Distribution Chart
+    const speciesData = await fetch('/api/charts/species').then(r => r.json());
+    const speciesCtx = document.getElementById('speciesChart').getContext('2d');
+    new Chart(speciesCtx, {
+        type: 'pie',
+        data: {
+            labels: speciesData.labels,
+            datasets: [{
+                data: speciesData.data,
+                backgroundColor: [
+                    '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true
+        }
+    });
+    
+    // Monthly Adoptions Chart
+    const adoptionsData = await fetch('/api/charts/adoptions').then(r => r.json());
+    const adoptionsCtx = document.getElementById('adoptionsChart').getContext('2d');
+    new Chart(adoptionsCtx, {
+        type: 'line',
+        data: {
+            labels: adoptionsData.labels,
+            datasets: [{
+                label: 'Adoptions',
+                data: adoptionsData.data,
+                borderColor: '#36A2EB',
+                backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+}
+
+loadCharts();
+</script>
+{% endblock %}
+

@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}Search Medical Records - Pet Adoption System{% endblock %}
+{% block page_title %}Search Medical Records by Animal{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Select Animal</h5>
+                <select class="form-select" id="animalSelect" onchange="searchMedicalRecords()">
+                    <option value="">-- Select Animal --</option>
+                    {% for animal in animals %}
+                    <option value="{{ animal._id }}">{{ animal.name }} ({{ animal.species }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <h4>Medical Records</h4>
+        <div id="resultsContainer">
+            <p class="text-muted">Select an animal to see its medical records</p>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+async function searchMedicalRecords() {
+    const animalId = document.getElementById('animalSelect').value;
+    if (!animalId) {
+        document.getElementById('resultsContainer').innerHTML = '<p class="text-muted">Select an animal to see its medical records</p>';
+        return;
+    }
+    
+    const response = await fetch(`/api/search/medical/${animalId}`);
+    const records = await response.json();
+    
+    if (records.length === 0) {
+        document.getElementById('resultsContainer').innerHTML = '<p class="text-muted">No medical records found for this animal</p>';
+        return;
+    }
+    
+    let html = '<table class="table table-striped"><thead><tr><th>Vet Name</th><th>Visit Date</th><th>Diagnosis</th><th>Treatment</th><th>Notes</th></tr></thead><tbody>';
+    records.forEach(record => {
+        html += `<tr>
+            <td>${record.vet_name}</td>
+            <td>${record.visit_date}</td>
+            <td>${record.diagnosis}</td>
+            <td>${record.treatment}</td>
+            <td>${record.notes || '-'}</td>
+        </tr>`;
+    });
+    html += '</tbody></table>';
+    document.getElementById('resultsContainer').innerHTML = html;
+}
+</script>
+{% endblock %}
+

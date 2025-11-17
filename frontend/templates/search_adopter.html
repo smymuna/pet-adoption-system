@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}Search by Adopter - Pet Adoption System{% endblock %}
+{% block page_title %}Search Animals by Adopter{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Select Adopter</h5>
+                <select class="form-select" id="adopterSelect" onchange="searchByAdopter()">
+                    <option value="">-- Select Adopter --</option>
+                    {% for adopter in adopters %}
+                    <option value="{{ adopter._id }}">{{ adopter.name }} ({{ adopter.email }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <h4>Adopted Animals</h4>
+        <div id="resultsContainer">
+            <p class="text-muted">Select an adopter to see their adopted animals</p>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+async function searchByAdopter() {
+    const adopterId = document.getElementById('adopterSelect').value;
+    if (!adopterId) {
+        document.getElementById('resultsContainer').innerHTML = '<p class="text-muted">Select an adopter to see their adopted animals</p>';
+        return;
+    }
+    
+    const response = await fetch(`/api/search/adopter/${adopterId}`);
+    const animals = await response.json();
+    
+    if (animals.length === 0) {
+        document.getElementById('resultsContainer').innerHTML = '<p class="text-muted">No animals found for this adopter</p>';
+        return;
+    }
+    
+    let html = '<table class="table table-striped"><thead><tr><th>Name</th><th>Species</th><th>Age</th><th>Gender</th><th>Adoption Date</th></tr></thead><tbody>';
+    animals.forEach(animal => {
+        html += `<tr>
+            <td>${animal.name}</td>
+            <td>${animal.species}</td>
+            <td>${animal.age}</td>
+            <td>${animal.gender}</td>
+            <td>${animal.adoption_date || '-'}</td>
+        </tr>`;
+    });
+    html += '</tbody></table>';
+    document.getElementById('resultsContainer').innerHTML = html;
+}
+</script>
+{% endblock %}
+

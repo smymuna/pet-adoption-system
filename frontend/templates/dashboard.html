@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Pet Adoption System{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-heart"></i> Total Animals</h5>
+                <h2>{{ stats.total_animals }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-people"></i> Total Adopters</h5>
+                <h2>{{ stats.total_adopters }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-info">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-handshake"></i> Total Adoptions</h5>
+                <h2>{{ stats.total_adoptions }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-warning">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-person-badge"></i> Volunteers</h5>
+                <h2>{{ stats.total_volunteers }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Available Animals</h5>
+                <h2 class="text-success">{{ stats.available_animals }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Adopted Animals</h5>
+                <h2 class="text-primary">{{ stats.adopted_animals }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

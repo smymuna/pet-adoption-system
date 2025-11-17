@@ -1,0 +1,31 @@
+{
+  "name": "pet-adoption-system",
+  "type": "http",
+  "config": {
+    "http_endpoint_config": {
+      "endpoints": [
+        {
+          "route": "/",
+          "http_method": "GET",
+          "function_name": "root"
+        },
+        {
+          "route": "/dashboard",
+          "http_method": "GET",
+          "function_name": "dashboard"
+        },
+        {
+          "route": "/api/animals",
+          "http_method": "GET",
+          "function_name": "get_animals"
+        },
+        {
+          "route": "/api/animals",
+          "http_method": "POST",
+          "function_name": "create_animal"
+        }
+      ]
+    }
+  }
+}
+
