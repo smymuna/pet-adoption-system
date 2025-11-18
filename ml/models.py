@@ -277,60 +277,105 @@ def train_all_models(db):
     return results
 
 
-def predict_adoption_likelihood(animal_data, db=None):
-    """Predict adoption likelihood for an animal with enhanced features"""
-    if not os.path.exists(ADOPTION_LIKELIHOOD_MODEL_PATH):
-        return None, None
+def calculate_priority_score(animal_data, db=None):
+    """Calculate simple priority score based on rules (0-100)
     
-    try:
-        model = joblib.load(ADOPTION_LIKELIHOOD_MODEL_PATH)
-        species_enc = joblib.load(SPECIES_ENCODER_PATH)
-        breed_enc = joblib.load(BREED_ENCODER_PATH)
-        gender_enc = joblib.load(GENDER_ENCODER_PATH)
-        status_enc = joblib.load(STATUS_ENCODER_PATH)
-        
-        # Get medical count if db provided
-        medical_count = 0
-        if db:
-            animal_id = animal_data.get('_id')
-            if animal_id:
+    Simple scoring system to determine priority for attention/marketing:
+    - Age: Younger animals score higher (0-30 points)
+    - Days in shelter: Fewer days = higher score (0-25 points)
+    - Medical history: Fewer visits = higher score (0-20 points)
+    - Species popularity: Common species score higher (0-15 points)
+    - Status: Available status gets bonus (0-10 points)
+    """
+    score = 0
+    factors = {}
+    
+    # Get medical count
+    medical_count = 0
+    if db:
+        animal_id = animal_data.get('_id')
+        if animal_id:
+            try:
                 medical_count = db.medical_records.count_documents({'animal_id': animal_id})
-        else:
-            medical_count = animal_data.get('medical_count', 0)
-        
-        # Calculate days in shelter
-        intake_date = animal_data.get('intake_date', '')
-        days_in_shelter = calculate_days_in_shelter(intake_date) or 0
-        
-        # Prepare features
-        species_encoded = species_enc.transform([animal_data.get('species', 'Unknown')])[0]
-        breed_encoded = breed_enc.transform([animal_data.get('breed', 'Unknown')])[0]
-        gender_encoded = gender_enc.transform([animal_data.get('gender', 'Unknown')])[0]
-        status_encoded = status_enc.transform([animal_data.get('status', 'Available')])[0]
-        
-        features = np.array([[
-            species_encoded, 
-            breed_encoded,
-            animal_data.get('age', 0), 
-            gender_encoded, 
-            status_encoded,
-            days_in_shelter,
-            medical_count
-        ]])
-        
-        # Get probability
-        prob = model.predict_proba(features)[0][1]
-        
-        # Get feature importance if available
-        feature_importance = dict(zip(
-            ['species', 'breed', 'age', 'gender', 'status', 'days_in_shelter', 'medical_count'],
-            model.feature_importances_
-        ))
-        
-        return prob, feature_importance
-    except Exception as e:
-        print(f"Prediction error: {e}")
-        return None, None
+            except:
+                pass
+    else:
+        medical_count = animal_data.get('medical_count', 0)
+    
+    # Factor 1: Age (0-30 points) - Younger is better
+    age = animal_data.get('age', 0)
+    if age <= 1:
+        age_score = 30
+    elif age <= 3:
+        age_score = 25
+    elif age <= 5:
+        age_score = 20
+    elif age <= 8:
+        age_score = 15
+    else:
+        age_score = max(5, 30 - age)  # Older animals get lower scores
+    score += age_score
+    factors['age'] = age_score / 30.0
+    
+    # Factor 2: Days in shelter (0-25 points) - Fewer days is better
+    intake_date = animal_data.get('intake_date', '')
+    days_in_shelter = calculate_days_in_shelter(intake_date) or 0
+    if days_in_shelter <= 7:
+        days_score = 25
+    elif days_in_shelter <= 30:
+        days_score = 20
+    elif days_in_shelter <= 60:
+        days_score = 15
+    elif days_in_shelter <= 90:
+        days_score = 10
+    else:
+        days_score = max(0, 25 - (days_in_shelter // 30))  # Decrease by 5 every 30 days
+    score += days_score
+    factors['days_in_shelter'] = days_score / 25.0
+    
+    # Factor 3: Medical history (0-20 points) - Fewer visits is better
+    if medical_count == 0:
+        medical_score = 20
+    elif medical_count == 1:
+        medical_score = 15
+    elif medical_count <= 3:
+        medical_score = 10
+    else:
+        medical_score = max(0, 20 - (medical_count * 3))  # Penalty for many visits
+    score += medical_score
+    factors['medical_count'] = medical_score / 20.0
+    
+    # Factor 4: Species popularity (0-15 points)
+    species = animal_data.get('species', 'Unknown')
+    popular_species = ['Dog', 'Cat']  # Most popular
+    if species in popular_species:
+        species_score = 15
+    elif species in ['Rabbit', 'Bird']:
+        species_score = 10
+    else:
+        species_score = 5
+    score += species_score
+    factors['species'] = species_score / 15.0
+    
+    # Factor 5: Status (0-10 points)
+    status = animal_data.get('status', 'Available')
+    if status == 'Available':
+        status_score = 10
+    elif status == 'Medical':
+        status_score = 5
+    else:
+        status_score = 0
+    score += status_score
+    factors['status'] = status_score / 10.0
+    
+    # Normalize to 0-100
+    max_possible_score = 100
+    normalized_score = min(100, max(0, score))
+    
+    # Convert to probability (0-1)
+    probability = normalized_score / 100.0
+    
+    return probability, factors
 
 
 def predict_time_to_adoption(animal_data, db=None):

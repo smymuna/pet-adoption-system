@@ -167,12 +167,19 @@ async def get_monthly_adoptions(
     start_date: Optional[str] = Query(None, description="Start date (YYYY-MM-DD)"),
     end_date: Optional[str] = Query(None, description="End date (YYYY-MM-DD)")
 ):
-    """Get monthly adoption numbers with optional date range filter"""
+    """Get monthly adoption numbers with optional date range filter
+    
+    Parameters:
+    - start_date: Optional start date filter (YYYY-MM-DD format)
+    - end_date: Optional end date filter (YYYY-MM-DD format)
+    
+    Returns monthly adoption counts grouped by year-month (YYYY-MM format)
+    """
     db = get_database()
     if db is None:
         raise HTTPException(status_code=500, detail="Database connection failed")
     
-    adoptions = db.adoptions.find()
+    adoptions = list(db.adoptions.find())
     monthly_count = Counter()
     
     start_dt = None
@@ -180,19 +187,24 @@ async def get_monthly_adoptions(
     if start_date:
         try:
             start_dt = datetime.strptime(start_date, '%Y-%m-%d')
-        except:
+        except ValueError:
             pass
     if end_date:
         try:
             end_dt = datetime.strptime(end_date, '%Y-%m-%d')
-        except:
+        except ValueError:
             pass
+    
+    valid_dates = 0
+    invalid_dates = 0
     
     for adoption in adoptions:
         adoption_date = adoption.get('adoption_date', '')
         if adoption_date:
             try:
-                date_obj = datetime.strptime(adoption_date, '%Y-%m-%d')
+                # Try parsing the date
+                date_obj = datetime.strptime(str(adoption_date), '%Y-%m-%d')
+                valid_dates += 1
                 
                 # Apply date filters
                 if start_dt and date_obj < start_dt:
@@ -202,15 +214,25 @@ async def get_monthly_adoptions(
                 
                 month_key = date_obj.strftime('%Y-%m')
                 monthly_count[month_key] += 1
-            except:
-                pass
+            except (ValueError, TypeError) as e:
+                invalid_dates += 1
+                # Log for debugging
+                print(f"Invalid adoption_date format: {adoption_date}, error: {e}")
     
     # Sort by month
     sorted_months = sorted(monthly_count.items())
     
     return {
         'labels': [item[0] for item in sorted_months],
-        'data': [item[1] for item in sorted_months]
+        'data': [item[1] for item in sorted_months],
+        'metadata': {
+            'total_adoptions': len(adoptions),
+            'valid_dates': valid_dates,
+            'invalid_dates': invalid_dates,
+            'filtered_count': sum(monthly_count.values()),
+            'start_date': start_date,
+            'end_date': end_date
+        }
     }
 
 
@@ -288,12 +310,19 @@ async def get_medical_visits(
     start_date: Optional[str] = Query(None, description="Start date (YYYY-MM-DD)"),
     end_date: Optional[str] = Query(None, description="End date (YYYY-MM-DD)")
 ):
-    """Get medical visits over time"""
+    """Get medical visits over time
+    
+    Parameters:
+    - start_date: Optional start date filter (YYYY-MM-DD format)
+    - end_date: Optional end date filter (YYYY-MM-DD format)
+    
+    Returns monthly medical visit counts grouped by year-month (YYYY-MM format)
+    """
     db = get_database()
     if db is None:
         raise HTTPException(status_code=500, detail="Database connection failed")
     
-    medical_records = db.medical_records.find()
+    medical_records = list(db.medical_records.find())
     monthly_count = Counter()
     
     start_dt = None
@@ -301,19 +330,24 @@ async def get_medical_visits(
     if start_date:
         try:
             start_dt = datetime.strptime(start_date, '%Y-%m-%d')
-        except:
+        except ValueError:
             pass
     if end_date:
         try:
             end_dt = datetime.strptime(end_date, '%Y-%m-%d')
-        except:
+        except ValueError:
             pass
+    
+    valid_dates = 0
+    invalid_dates = 0
     
     for record in medical_records:
         visit_date = record.get('visit_date', '')
         if visit_date:
             try:
-                date_obj = datetime.strptime(visit_date, '%Y-%m-%d')
+                # Try parsing the date
+                date_obj = datetime.strptime(str(visit_date), '%Y-%m-%d')
+                valid_dates += 1
                 
                 # Apply date filters
                 if start_dt and date_obj < start_dt:
@@ -323,14 +357,24 @@ async def get_medical_visits(
                 
                 month_key = date_obj.strftime('%Y-%m')
                 monthly_count[month_key] += 1
-            except:
-                pass
+            except (ValueError, TypeError) as e:
+                invalid_dates += 1
+                # Log for debugging
+                print(f"Invalid visit_date format: {visit_date}, error: {e}")
     
     # Sort by month
     sorted_months = sorted(monthly_count.items())
     
     return {
         'labels': [item[0] for item in sorted_months],
-        'data': [item[1] for item in sorted_months]
+        'data': [item[1] for item in sorted_months],
+        'metadata': {
+            'total_records': len(medical_records),
+            'valid_dates': valid_dates,
+            'invalid_dates': invalid_dates,
+            'filtered_count': sum(monthly_count.values()),
+            'start_date': start_date,
+            'end_date': end_date
+        }
     }
 

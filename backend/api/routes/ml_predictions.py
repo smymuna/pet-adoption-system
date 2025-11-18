@@ -11,7 +11,7 @@ from typing import List, Dict, Optional
 import os
 
 from backend.database.connection import get_database, serialize_doc
-from ml.models import train_all_models, predict_adoption_likelihood, predict_time_to_adoption
+from ml.models import train_all_models, calculate_priority_score, predict_time_to_adoption
 
 router = APIRouter()
 templates = Jinja2Templates(directory="frontend/templates")
@@ -74,38 +74,52 @@ async def get_all_predictions():
     
     for animal in animals:
         animal_doc = serialize_doc(animal)
+        animal_id = animal_doc['_id']
+        
+        # Get medical history count
         try:
-            likelihood, likelihood_importance = predict_adoption_likelihood(animal_doc, db)
+            medical_count = db.medical_records.count_documents({'animal_id': animal_id})
+        except:
+            medical_count = 0
+        
+        try:
+            # Use simple rule-based priority score instead of ML
+            priority_score, score_factors = calculate_priority_score(animal_doc, db)
             time_to_adoption, time_importance = predict_time_to_adoption(animal_doc, db)
             
-            # Determine priority level based on likelihood
+            # Determine priority level based on score
             priority = 'Low'
-            if likelihood:
-                if likelihood >= 0.7:
+            if priority_score:
+                if priority_score >= 0.7:
                     priority = 'High'
-                elif likelihood >= 0.4:
+                elif priority_score >= 0.4:
                     priority = 'Medium'
             
             predictions.append({
-                '_id': animal_doc['_id'],
+                '_id': animal_id,
                 'name': animal_doc['name'],
                 'species': animal_doc['species'],
-                'breed': animal_doc.get('breed', 'Unknown'),
+                'breed': animal_doc.get('breed') or 'Unknown',
                 'age': animal_doc.get('age', 0),
                 'gender': animal_doc.get('gender', 'Unknown'),
-                'adoption_likelihood': round(likelihood * 100, 2) if likelihood else None,
+                'medical_count': medical_count,
+                'behavioral_notes': animal_doc.get('behavioral_notes') or 'N/A',
+                'priority_score': round(priority_score * 100, 2) if priority_score else None,
                 'time_to_adoption_days': round(time_to_adoption, 1) if time_to_adoption else None,
-                'priority': priority
+                'priority': priority,
+                'score_factors': score_factors  # Show what factors contributed
             })
         except Exception as e:
             predictions.append({
-                '_id': animal_doc['_id'],
+                '_id': animal_id,
                 'name': animal_doc['name'],
                 'species': animal_doc['species'],
-                'breed': animal_doc.get('breed', 'Unknown'),
+                'breed': animal_doc.get('breed') or 'Unknown',
                 'age': animal_doc.get('age', 0),
                 'gender': animal_doc.get('gender', 'Unknown'),
-                'adoption_likelihood': None,
+                'medical_count': medical_count,
+                'behavioral_notes': animal_doc.get('behavioral_notes') or 'N/A',
+                'priority_score': None,
                 'time_to_adoption_days': None,
                 'priority': 'Unknown',
                 'error': str(e)
@@ -211,12 +225,12 @@ async def predict_animal(animal_id: str):
             raise HTTPException(status_code=404, detail="Animal not found")
         
         animal_doc = serialize_doc(animal)
-        likelihood, _ = predict_adoption_likelihood(animal_doc, db)
+        priority_score, _ = calculate_priority_score(animal_doc, db)
         time_to_adoption, _ = predict_time_to_adoption(animal_doc, db)
         
         return {
             'animal_id': animal_id,
-            'adoption_likelihood': round(likelihood * 100, 2) if likelihood else None,
+            'priority_score': round(priority_score * 100, 2) if priority_score else None,
             'time_to_adoption_days': round(time_to_adoption, 1) if time_to_adoption else None
         }
     except HTTPException:

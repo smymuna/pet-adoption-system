@@ -9,22 +9,21 @@
     <div class="col-12">
         <div class="card bg-light">
             <div class="card-body">
-                <h5 class="card-title"><i class="bi bi-info-circle"></i> What is Machine Learning Used For?</h5>
-                <p class="mb-2">This system uses <strong>Machine Learning</strong> to help predict adoption outcomes for animals in the shelter:</p>
+                <h5 class="card-title"><i class="bi bi-info-circle"></i> Priority Scoring System</h5>
+                <p class="mb-2">This system uses a <strong>simple rule-based scoring system</strong> to calculate priority scores for animals:</p>
                 <ul class="mb-2">
-                    <li><strong>Adoption Likelihood Prediction:</strong> Uses a Random Forest Classifier to predict the probability (0-100%) that an animal will be adopted based on <strong>7 features</strong>: species, breed, age, gender, status, days in shelter, and medical history count.</li>
-                    <li><strong>Time-to-Adoption Prediction:</strong> Uses a Random Forest Regressor to predict how many days it will take for an animal to be adopted using <strong>6 features</strong>: species, breed, age, gender, days in shelter, and medical history count.</li>
+                    <li><strong>Priority Score:</strong> A simple score (0-100%) that indicates how urgently an animal needs attention/marketing. Calculated from 5 factors: age, days in shelter, medical history, species popularity, and status. No ML training required - works immediately!</li>
+                    <li><strong>Time-to-Adoption Prediction:</strong> Uses a Random Forest Regressor to predict how many days it will take for an animal to be adopted (requires training with adoption data).</li>
                 </ul>
-                <p class="mb-0"><strong>Features Used:</strong></p>
+                <p class="mb-0"><strong>Scoring Factors (Total: 100 points):</strong></p>
                 <ul class="mb-0">
-                    <li><strong>Species & Breed:</strong> Type and specific breed of the animal</li>
-                    <li><strong>Age:</strong> Age in years</li>
-                    <li><strong>Gender:</strong> Male or Female</li>
-                    <li><strong>Status:</strong> Current status (Available, Adopted, Medical)</li>
-                    <li><strong>Days in Shelter:</strong> How long the animal has been at the shelter (calculated from intake date)</li>
-                    <li><strong>Medical History Count:</strong> Number of medical records/vet visits</li>
+                    <li><strong>Age (0-30 points):</strong> Younger animals score higher</li>
+                    <li><strong>Days in Shelter (0-25 points):</strong> Fewer days = higher score</li>
+                    <li><strong>Medical History (0-20 points):</strong> Fewer visits = higher score</li>
+                    <li><strong>Species Popularity (0-15 points):</strong> Dogs and cats score highest</li>
+                    <li><strong>Status (0-10 points):</strong> Available status gets full points</li>
                 </ul>
-                <p class="mt-2 mb-0"><small class="text-muted">Models are trained on historical adoption data and improve as more data becomes available. Feature importance shows which factors matter most for predictions.</small></p>
+                <p class="mt-2 mb-0"><small class="text-muted">The priority score helps identify which animals need immediate attention or marketing efforts. Higher scores indicate animals that should be prioritized for adoption promotion.</small></p>
             </div>
         </div>
     </div>
@@ -54,9 +53,9 @@
             <i class="bi bi-gear"></i> Train Models
         </button>
                 <button class="btn btn-success mb-2" onclick="loadPredictions()" style="width: 100%;">
-            <i class="bi bi-arrow-clockwise"></i> Refresh Predictions
-        </button>
-                <small class="text-muted d-block">Train models first if they haven't been trained yet. Requires at least 10 animals for likelihood model and 5 adoptions for time-to-adoption model.</small>
+                    <i class="bi bi-arrow-clockwise"></i> Refresh Predictions
+                </button>
+                <small class="text-muted d-block">Priority Score works immediately (no training needed). Time-to-adoption prediction requires training with at least 5 adoptions.</small>
             </div>
         </div>
     </div>
@@ -71,8 +70,8 @@
                 <div>
                     <label class="form-label me-2">Sort by:</label>
                     <select class="form-select form-select-sm d-inline-block" style="width: auto;" id="sortSelect" onchange="sortPredictions()">
-                        <option value="likelihood-desc">Likelihood (High to Low)</option>
-                        <option value="likelihood-asc">Likelihood (Low to High)</option>
+                        <option value="score-desc">Priority Score (High to Low)</option>
+                        <option value="score-asc">Priority Score (Low to High)</option>
                         <option value="time-asc">Time to Adoption (Shortest First)</option>
                         <option value="time-desc">Time to Adoption (Longest First)</option>
                         <option value="name">Name (A-Z)</option>
@@ -93,11 +92,11 @@
     <div class="col-md-6">
         <div class="card">
             <div class="card-header">
-                <h5 class="mb-0"><i class="bi bi-graph-up-arrow"></i> Feature Importance - Adoption Likelihood</h5>
+                <h5 class="mb-0"><i class="bi bi-graph-up-arrow"></i> Priority Score Factors</h5>
             </div>
             <div class="card-body">
                 <div id="likelihoodImportance">
-                    <p class="text-muted">Train models to see feature importance</p>
+                    <p class="text-muted">Priority score is calculated from: Age (30%), Days in Shelter (25%), Medical History (20%), Species (15%), Status (10%)</p>
                 </div>
             </div>
         </div>
@@ -121,7 +120,7 @@
     <div class="col-md-6">
         <div class="card">
             <div class="card-header">
-                <h5 class="mb-0"><i class="bi bi-bar-chart"></i> Adoption Likelihood Distribution</h5>
+                <h5 class="mb-0"><i class="bi bi-bar-chart"></i> Priority Score Distribution</h5>
             </div>
             <div class="card-body">
                 <canvas id="likelihoodChart" height="200"></canvas>
@@ -157,15 +156,12 @@ async function loadModelStatus() {
         const container = document.getElementById('modelStatus');
         let html = '<div class="mb-2">';
         
-        // Adoption Likelihood Model
+        // Priority Score (always available - no training needed)
         html += '<div class="d-flex justify-content-between align-items-center mb-2">';
-        html += '<span><strong>Adoption Likelihood Model:</strong></span>';
-        if (status.adoption_likelihood.trained) {
-            html += '<span class="badge bg-success">Trained</span>';
-        } else {
-            html += '<span class="badge bg-warning">Not Trained</span>';
-        }
+        html += '<span><strong>Priority Score:</strong></span>';
+        html += '<span class="badge bg-success">Always Available</span>';
         html += '</div>';
+        html += '<small class="text-muted d-block mb-2">Simple rule-based calculation - no training required</small>';
         
         // Time to Adoption Model
         html += '<div class="d-flex justify-content-between align-items-center">';
@@ -197,17 +193,13 @@ async function trainModels() {
         const result = await response.json();
         
         if (response.ok) {
-            let message = 'Models trained successfully!<br>';
-            if (result.adoption_likelihood?.trained) {
-                message += `✓ Adoption Likelihood Model: ${result.adoption_likelihood.accuracy}% accuracy<br>`;
-            } else {
-                message += `✗ Adoption Likelihood Model: ${result.adoption_likelihood?.message || 'Failed'}<br>`;
-            }
+            let message = 'Model training completed!<br>';
             if (result.time_to_adoption?.trained) {
                 message += `✓ Time-to-Adoption Model: R² = ${result.time_to_adoption.r2_score}<br>`;
             } else {
                 message += `✗ Time-to-Adoption Model: ${result.time_to_adoption?.message || 'Failed'}<br>`;
             }
+            message += '<small>Note: Priority Score works immediately without training</small>';
             showAlert(message, 'success');
             loadModelStatus();
             loadPredictions();
@@ -251,12 +243,19 @@ function renderPredictionsTable(data) {
     let html = '<div class="table-responsive"><table class="table table-striped table-hover">';
     html += '<thead><tr>';
     html += '<th>Name</th><th>Species</th><th>Breed</th><th>Age</th><th>Gender</th>';
-    html += '<th>Adoption Likelihood</th><th>Time to Adoption</th><th>Priority</th>';
+    html += '<th>Medical History</th><th>Behavioral Notes</th>';
+    html += '<th>Priority Score</th><th>Time to Adoption</th><th>Priority</th>';
     html += '</tr></thead><tbody>';
     
     data.forEach(pred => {
-        const likelihood = pred.adoption_likelihood !== null ? pred.adoption_likelihood + '%' : 'N/A';
+        const score = pred.priority_score !== null && pred.priority_score !== undefined ? pred.priority_score + '%' : 'N/A';
         const time = pred.time_to_adoption_days !== null ? pred.time_to_adoption_days + ' days' : 'N/A';
+        const medicalCount = pred.medical_count !== undefined ? pred.medical_count : 0;
+        const behavioralNotes = pred.behavioral_notes && pred.behavioral_notes !== 'N/A' 
+            ? (pred.behavioral_notes.length > 50 
+                ? pred.behavioral_notes.substring(0, 50) + '...' 
+                : pred.behavioral_notes)
+            : 'N/A';
         
         // Priority badge color
         let priorityClass = 'bg-secondary';
@@ -264,10 +263,10 @@ function renderPredictionsTable(data) {
         else if (pred.priority === 'Medium') priorityClass = 'bg-warning';
         else if (pred.priority === 'Low') priorityClass = 'bg-info';
         
-        // Likelihood progress bar color
-        let likelihoodClass = 'bg-danger';
-        if (pred.adoption_likelihood >= 70) likelihoodClass = 'bg-success';
-        else if (pred.adoption_likelihood >= 40) likelihoodClass = 'bg-warning';
+        // Score progress bar color
+        let scoreClass = 'bg-danger';
+        if (pred.priority_score >= 70) scoreClass = 'bg-success';
+        else if (pred.priority_score >= 40) scoreClass = 'bg-warning';
         
         html += `<tr>
             <td><strong>${pred.name}</strong></td>
@@ -276,13 +275,23 @@ function renderPredictionsTable(data) {
             <td>${pred.age} years</td>
             <td>${pred.gender}</td>
             <td>
-                ${pred.adoption_likelihood !== null ? `
+                <span class="badge ${medicalCount > 0 ? 'bg-warning' : 'bg-secondary'}">
+                    ${medicalCount} ${medicalCount === 1 ? 'visit' : 'visits'}
+                </span>
+            </td>
+            <td>
+                <small title="${pred.behavioral_notes && pred.behavioral_notes !== 'N/A' ? pred.behavioral_notes : ''}">
+                    ${behavioralNotes}
+                </small>
+            </td>
+            <td>
+                ${pred.priority_score !== null && pred.priority_score !== undefined ? `
                     <div class="progress" style="height: 20px;">
-                        <div class="progress-bar ${likelihoodClass}" role="progressbar" 
-                             style="width: ${pred.adoption_likelihood}%" 
-                             aria-valuenow="${pred.adoption_likelihood}" 
+                        <div class="progress-bar ${scoreClass}" role="progressbar" 
+                             style="width: ${pred.priority_score}%" 
+                             aria-valuenow="${pred.priority_score}" 
                              aria-valuemin="0" aria-valuemax="100">
-                            ${likelihood}
+                            ${score}
                         </div>
                     </div>
                 ` : 'N/A'}
@@ -302,11 +311,11 @@ function sortPredictions() {
     let sorted = [...predictionsData];
     
     switch(sortValue) {
-        case 'likelihood-desc':
-            sorted.sort((a, b) => (b.adoption_likelihood || 0) - (a.adoption_likelihood || 0));
+        case 'score-desc':
+            sorted.sort((a, b) => (b.priority_score || 0) - (a.priority_score || 0));
             break;
-        case 'likelihood-asc':
-            sorted.sort((a, b) => (a.adoption_likelihood || 0) - (b.adoption_likelihood || 0));
+        case 'score-asc':
+            sorted.sort((a, b) => (a.priority_score || 0) - (b.priority_score || 0));
             break;
         case 'time-asc':
             sorted.sort((a, b) => (a.time_to_adoption_days || Infinity) - (b.time_to_adoption_days || Infinity));
@@ -324,8 +333,8 @@ function sortPredictions() {
 
 // Update charts
 function updateCharts(data) {
-    // Likelihood distribution
-    const likelihoodRanges = {
+    // Priority score distribution
+    const scoreRanges = {
         '0-20%': 0,
         '21-40%': 0,
         '41-60%': 0,
@@ -334,13 +343,13 @@ function updateCharts(data) {
     };
     
     data.forEach(pred => {
-        if (pred.adoption_likelihood !== null) {
-            const val = pred.adoption_likelihood;
-            if (val <= 20) likelihoodRanges['0-20%']++;
-            else if (val <= 40) likelihoodRanges['21-40%']++;
-            else if (val <= 60) likelihoodRanges['41-60%']++;
-            else if (val <= 80) likelihoodRanges['61-80%']++;
-            else likelihoodRanges['81-100%']++;
+        if (pred.priority_score !== null && pred.priority_score !== undefined) {
+            const val = pred.priority_score;
+            if (val <= 20) scoreRanges['0-20%']++;
+            else if (val <= 40) scoreRanges['21-40%']++;
+            else if (val <= 60) scoreRanges['41-60%']++;
+            else if (val <= 80) scoreRanges['61-80%']++;
+            else scoreRanges['81-100%']++;
         }
     });
     
@@ -350,10 +359,10 @@ function updateCharts(data) {
     likelihoodChart = new Chart(likelihoodCtx, {
         type: 'bar',
         data: {
-            labels: Object.keys(likelihoodRanges),
+            labels: Object.keys(scoreRanges),
             datasets: [{
                 label: 'Number of Animals',
-                data: Object.values(likelihoodRanges),
+                data: Object.values(scoreRanges),
                 backgroundColor: ['#dc3545', '#ffc107', '#17a2b8', '#28a745', '#20c997']
             }]
         },

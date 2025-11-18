@@ -17,6 +17,7 @@ class AnimalCreate(BaseModel):
     gender: str
     status: str = "Available"
     intake_date: Optional[str] = None  # YYYY-MM-DD format
+    behavioral_notes: Optional[str] = None
 
 
 class AnimalUpdate(BaseModel):
@@ -27,6 +28,7 @@ class AnimalUpdate(BaseModel):
     gender: Optional[str] = None
     status: Optional[str] = None
     intake_date: Optional[str] = None
+    behavioral_notes: Optional[str] = None
 
 
 class AnimalResponse(BaseModel):
@@ -40,6 +42,7 @@ class AnimalResponse(BaseModel):
     gender: str
     status: str
     intake_date: Optional[str] = None
+    behavioral_notes: Optional[str] = None
 
 
 # Adopter Models

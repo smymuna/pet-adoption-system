@@ -376,46 +376,90 @@ async function loadGenderChart(filters) {
 async function loadAdoptionsChart(filters) {
     const query = buildQueryString(filters, 'time');
     const url = `/api/charts/adoptions${query ? '?' + query : ''}`;
-    const data = await fetch(url).then(r => r.json());
     
-    const ctx = document.getElementById('adoptionsChart').getContext('2d');
-    
-    if (adoptionsChart) adoptionsChart.destroy();
-    
-    adoptionsChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: data.labels,
-            datasets: [{
-                label: 'Adoptions',
-                data: data.data,
-                borderColor: '#36A2EB',
-                backgroundColor: 'rgba(54, 162, 235, 0.1)',
-                tension: 0.4,
-                fill: true,
-                pointRadius: 4,
-                pointHoverRadius: 6
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        stepSize: 1
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        const ctx = document.getElementById('adoptionsChart').getContext('2d');
+        const cardBody = ctx.canvas.closest('.card-body');
+        
+        // Clear any existing messages
+        const existingMsg = cardBody.querySelector('.chart-message');
+        if (existingMsg) existingMsg.remove();
+        
+        // Check if we have data
+        if (!data.labels || data.labels.length === 0 || !data.data || data.data.length === 0) {
+            if (adoptionsChart) adoptionsChart.destroy();
+            
+            const msg = document.createElement('div');
+            msg.className = 'chart-message alert alert-info';
+            msg.innerHTML = `
+                <strong>No Data Available</strong><br>
+                <small>
+                    ${data.metadata ? `
+                        Total adoptions: ${data.metadata.total_adoptions}<br>
+                        Valid dates: ${data.metadata.valid_dates}<br>
+                        Invalid dates: ${data.metadata.invalid_dates}<br>
+                        ${data.metadata.start_date ? `Filter: ${data.metadata.start_date} to ${data.metadata.end_date || 'now'}` : 'No date filter applied'}
+                    ` : 'No adoption records with valid dates found.'}
+                    <br><br>
+                    <strong>Parameters:</strong> Date format must be YYYY-MM-DD (e.g., 2024-01-15)
+                </small>
+            `;
+            cardBody.insertBefore(msg, ctx.canvas);
+            return;
+        }
+        
+        if (adoptionsChart) adoptionsChart.destroy();
+        
+        adoptionsChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    label: 'Adoptions',
+                    data: data.data,
+                    borderColor: '#36A2EB',
+                    backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    title: {
+                        display: true,
+                        text: data.metadata ? `Total: ${data.metadata.filtered_count} adoptions` : ''
                     }
                 }
-            },
-            plugins: {
-                tooltip: {
-                    mode: 'index',
-                    intersect: false
-                }
             }
-        }
-    });
+        });
+    } catch (error) {
+        console.error('Error loading adoptions chart:', error);
+        const ctx = document.getElementById('adoptionsChart').getContext('2d');
+        const cardBody = ctx.canvas.closest('.card-body');
+        const msg = document.createElement('div');
+        msg.className = 'chart-message alert alert-danger';
+        msg.textContent = 'Error loading chart: ' + error.message;
+        cardBody.insertBefore(msg, ctx.canvas);
+    }
 }
 
 // Adoption Rate Chart
@@ -476,46 +520,90 @@ async function loadAdoptionRateChart() {
 async function loadMedicalChart(filters) {
     const query = buildQueryString(filters, 'medical');
     const url = `/api/charts/medical-visits${query ? '?' + query : ''}`;
-    const data = await fetch(url).then(r => r.json());
     
-    const ctx = document.getElementById('medicalChart').getContext('2d');
-    
-    if (medicalChart) medicalChart.destroy();
-    
-    medicalChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: data.labels,
-            datasets: [{
-                label: 'Medical Visits',
-                data: data.data,
-                borderColor: '#dc3545',
-                backgroundColor: 'rgba(220, 53, 69, 0.1)',
-                tension: 0.4,
-                fill: true,
-                pointRadius: 4,
-                pointHoverRadius: 6
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        stepSize: 1
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        const ctx = document.getElementById('medicalChart').getContext('2d');
+        const cardBody = ctx.canvas.closest('.card-body');
+        
+        // Clear any existing messages
+        const existingMsg = cardBody.querySelector('.chart-message');
+        if (existingMsg) existingMsg.remove();
+        
+        // Check if we have data
+        if (!data.labels || data.labels.length === 0 || !data.data || data.data.length === 0) {
+            if (medicalChart) medicalChart.destroy();
+            
+            const msg = document.createElement('div');
+            msg.className = 'chart-message alert alert-info';
+            msg.innerHTML = `
+                <strong>No Data Available</strong><br>
+                <small>
+                    ${data.metadata ? `
+                        Total medical records: ${data.metadata.total_records}<br>
+                        Valid dates: ${data.metadata.valid_dates}<br>
+                        Invalid dates: ${data.metadata.invalid_dates}<br>
+                        ${data.metadata.start_date ? `Filter: ${data.metadata.start_date} to ${data.metadata.end_date || 'now'}` : 'No date filter applied'}
+                    ` : 'No medical records with valid dates found.'}
+                    <br><br>
+                    <strong>Parameters:</strong> Date format must be YYYY-MM-DD (e.g., 2024-01-15)
+                </small>
+            `;
+            cardBody.insertBefore(msg, ctx.canvas);
+            return;
+        }
+        
+        if (medicalChart) medicalChart.destroy();
+        
+        medicalChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    label: 'Medical Visits',
+                    data: data.data,
+                    borderColor: '#dc3545',
+                    backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    title: {
+                        display: true,
+                        text: data.metadata ? `Total: ${data.metadata.filtered_count} visits` : ''
                     }
                 }
-            },
-            plugins: {
-                tooltip: {
-                    mode: 'index',
-                    intersect: false
-                }
             }
-        }
-    });
+        });
+    } catch (error) {
+        console.error('Error loading medical chart:', error);
+        const ctx = document.getElementById('medicalChart').getContext('2d');
+        const cardBody = ctx.canvas.closest('.card-body');
+        const msg = document.createElement('div');
+        msg.className = 'chart-message alert alert-danger';
+        msg.textContent = 'Error loading chart: ' + error.message;
+        cardBody.insertBefore(msg, ctx.canvas);
+    }
 }
 
 // Apply filters
