@@ -16,6 +16,7 @@
         <tr>
             <th>Name</th>
             <th>Species</th>
+            <th>Breed</th>
             <th>Age</th>
             <th>Gender</th>
             <th>Status</th>
@@ -27,6 +28,7 @@
         <tr data-id="{{ animal._id }}">
             <td>{{ animal.name }}</td>
             <td>{{ animal.species }}</td>
+            <td>{{ animal.breed or 'N/A' }}</td>
             <td>{{ animal.age }}</td>
             <td>{{ animal.gender }}</td>
             <td><span class="badge bg-{{ 'success' if animal.status == 'Available' else 'primary' if animal.status == 'Adopted' else 'warning' }}">{{ animal.status }}</span></td>
@@ -45,7 +47,7 @@
 
 <!-- Add Animal Modal -->
 <div class="modal fade" id="addAnimalModal" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Add Animal</h5>
@@ -57,28 +59,50 @@
                         <label class="form-label">Name</label>
                         <input type="text" class="form-control" name="name" required>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Species</label>
-                        <input type="text" class="form-control" name="species" required>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Species</label>
+                            <select class="form-select" name="species" id="addAnimalSpecies" required onchange="updateBreeds('add')">
+                                <option value="">Select Species</option>
+                                {% for species in species_list %}
+                                <option value="{{ species }}">{{ species }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Breed</label>
+                            <select class="form-select" name="breed" id="addAnimalBreed" required>
+                                <option value="">Select Species First</option>
+                            </select>
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Age</label>
-                        <input type="number" class="form-control" name="age" required>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Age (years)</label>
+                            <input type="number" class="form-control" name="age" min="0" step="0.1" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Gender</label>
+                            <select class="form-select" name="gender" required>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                            </select>
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Gender</label>
-                        <select class="form-select" name="gender" required>
-                            <option value="Male">Male</option>
-                            <option value="Female">Female</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Status</label>
-                        <select class="form-select" name="status" required>
-                            <option value="Available">Available</option>
-                            <option value="Adopted">Adopted</option>
-                            <option value="Medical">Medical</option>
-                        </select>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Status</label>
+                            <select class="form-select" name="status" required>
+                                <option value="Available">Available</option>
+                                <option value="Adopted">Adopted</option>
+                                <option value="Medical">Medical</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Intake Date</label>
+                            <input type="date" class="form-control" name="intake_date" id="addAnimalIntakeDate">
+                            <small class="form-text text-muted">Date when animal arrived at shelter (optional)</small>
+                        </div>
                     </div>
                 </form>
             </div>
@@ -92,7 +116,7 @@
 
 <!-- Edit Animal Modal -->
 <div class="modal fade" id="editAnimalModal" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Edit Animal</h5>
@@ -105,28 +129,50 @@
                         <label class="form-label">Name</label>
                         <input type="text" class="form-control" name="name" id="editAnimalName" required>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Species</label>
-                        <input type="text" class="form-control" name="species" id="editAnimalSpecies" required>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Species</label>
+                            <select class="form-select" name="species" id="editAnimalSpecies" required onchange="updateBreeds('edit')">
+                                <option value="">Select Species</option>
+                                {% for species in species_list %}
+                                <option value="{{ species }}">{{ species }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Breed</label>
+                            <select class="form-select" name="breed" id="editAnimalBreed" required>
+                                <option value="">Select Species First</option>
+                            </select>
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Age</label>
-                        <input type="number" class="form-control" name="age" id="editAnimalAge" required>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Age (years)</label>
+                            <input type="number" class="form-control" name="age" id="editAnimalAge" min="0" step="0.1" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Gender</label>
+                            <select class="form-select" name="gender" id="editAnimalGender" required>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                            </select>
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Gender</label>
-                        <select class="form-select" name="gender" id="editAnimalGender" required>
-                            <option value="Male">Male</option>
-                            <option value="Female">Female</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Status</label>
-                        <select class="form-select" name="status" id="editAnimalStatus" required>
-                            <option value="Available">Available</option>
-                            <option value="Adopted">Adopted</option>
-                            <option value="Medical">Medical</option>
-                        </select>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Status</label>
+                            <select class="form-select" name="status" id="editAnimalStatus" required>
+                                <option value="Available">Available</option>
+                                <option value="Adopted">Adopted</option>
+                                <option value="Medical">Medical</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Intake Date</label>
+                            <input type="date" class="form-control" name="intake_date" id="editAnimalIntakeDate">
+                            <small class="form-text text-muted">Date when animal arrived at shelter (optional)</small>
+                        </div>
                     </div>
                 </form>
             </div>
@@ -141,9 +187,34 @@
 
 {% block extra_js %}
 <script>
+// Species-Breed mapping
+const speciesBreeds = {{ species_breeds | tojson }};
+
+function updateBreeds(mode) {
+    const speciesSelect = mode === 'add' ? document.getElementById('addAnimalSpecies') : document.getElementById('editAnimalSpecies');
+    const breedSelect = mode === 'add' ? document.getElementById('addAnimalBreed') : document.getElementById('editAnimalBreed');
+    
+    const selectedSpecies = speciesSelect.value;
+    breedSelect.innerHTML = '<option value="">Select Breed</option>';
+    
+    if (selectedSpecies && speciesBreeds[selectedSpecies]) {
+        speciesBreeds[selectedSpecies].forEach(breed => {
+            const option = document.createElement('option');
+            option.value = breed;
+            option.textContent = breed;
+            breedSelect.appendChild(option);
+        });
+    }
+}
+
 async function saveAnimal() {
     const form = document.getElementById('addAnimalForm');
     const formData = Object.fromEntries(new FormData(form));
+    
+    // Remove empty intake_date
+    if (!formData.intake_date) {
+        delete formData.intake_date;
+    }
     
     const response = await fetch('/api/animals', {
         method: 'POST',
@@ -154,7 +225,8 @@ async function saveAnimal() {
     if (response.ok) {
         location.reload();
     } else {
-        showAlert('Error adding animal', 'danger');
+        const error = await response.json();
+        showAlert('Error adding animal: ' + (error.detail || 'Unknown error'), 'danger');
     }
 }
 
@@ -169,6 +241,21 @@ async function editAnimal(id) {
     document.getElementById('editAnimalGender').value = animal.gender;
     document.getElementById('editAnimalStatus').value = animal.status;
     
+    // Update breeds for selected species
+    updateBreeds('edit');
+    
+    // Set breed after breeds are loaded
+    setTimeout(() => {
+        if (animal.breed) {
+            document.getElementById('editAnimalBreed').value = animal.breed;
+        }
+    }, 100);
+    
+    // Set intake date
+    if (animal.intake_date) {
+        document.getElementById('editAnimalIntakeDate').value = animal.intake_date;
+    }
+    
     new bootstrap.Modal(document.getElementById('editAnimalModal')).show();
 }
 
@@ -177,6 +264,11 @@ async function updateAnimal() {
     const id = document.getElementById('editAnimalId').value;
     const formData = Object.fromEntries(new FormData(form));
     delete formData.id;
+    
+    // Remove empty intake_date
+    if (!formData.intake_date) {
+        delete formData.intake_date;
+    }
     
     const response = await fetch(`/api/animals/${id}`, {
         method: 'PUT',
@@ -187,7 +279,8 @@ async function updateAnimal() {
     if (response.ok) {
         location.reload();
     } else {
-        showAlert('Error updating animal', 'danger');
+        const error = await response.json();
+        showAlert('Error updating animal: ' + (error.detail || 'Unknown error'), 'danger');
     }
 }
 
@@ -204,6 +297,8 @@ async function deleteAnimal(id) {
         showAlert('Error deleting animal', 'danger');
     }
 }
+
+// Set default intake date to today when adding
+document.getElementById('addAnimalIntakeDate').valueAsDate = new Date();
 </script>
 {% endblock %}
-

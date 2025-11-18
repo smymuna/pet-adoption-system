@@ -7,10 +7,11 @@ from fastapi import APIRouter, Request, HTTPException, Path
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from bson import ObjectId
-from typing import List
+from typing import List, Dict
 
 from backend.database.connection import get_database, serialize_doc
 from backend.models import AnimalCreate, AnimalUpdate, AnimalResponse, SuccessResponse
+from backend.species_breeds import SPECIES_LIST, SPECIES_BREEDS, get_breeds_for_species
 
 router = APIRouter()
 templates = Jinja2Templates(directory="frontend/templates")
@@ -24,7 +25,12 @@ async def animals_page(request: Request):
         raise HTTPException(status_code=500, detail="Database connection failed")
     
     animals_list = [serialize_doc(a) for a in db.animals.find()]
-    return templates.TemplateResponse("animals.html", {"request": request, "animals": animals_list})
+    return templates.TemplateResponse("animals.html", {
+        "request": request, 
+        "animals": animals_list,
+        "species_list": SPECIES_LIST,
+        "species_breeds": SPECIES_BREEDS
+    })
 
 
 @router.get("", response_model=List[AnimalResponse])
@@ -41,6 +47,12 @@ async def get_animals():
         if all(key in a for key in ['name', 'species', 'age', 'gender', 'status']):
             animals_list.append(serialize_doc(a))
     return animals_list
+
+
+@router.get("/species-breeds")
+async def get_species_breeds():
+    """Get species and breeds mapping"""
+    return {"species_breeds": SPECIES_BREEDS, "species_list": SPECIES_LIST}
 
 
 @router.post("", response_model=AnimalResponse)

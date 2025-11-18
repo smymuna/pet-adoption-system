@@ -16,6 +16,11 @@ from ml.models import train_all_models, predict_adoption_likelihood, predict_tim
 router = APIRouter()
 templates = Jinja2Templates(directory="frontend/templates")
 
+# Model file paths - use same paths as ml/models.py
+MODELS_DIR = os.path.join(os.path.dirname(__file__), '../../ml/saved_models')
+ADOPTION_LIKELIHOOD_MODEL_PATH = os.path.join(MODELS_DIR, 'adoption_likelihood_model.pkl')
+TIME_TO_ADOPTION_MODEL_PATH = os.path.join(MODELS_DIR, 'time_to_adoption_model.pkl')
+
 
 @router.get("", response_class=HTMLResponse, include_in_schema=False)
 async def ml_predictions_page(request: Request):
@@ -25,7 +30,22 @@ async def ml_predictions_page(request: Request):
         raise HTTPException(status_code=500, detail="Database connection failed")
     
     animals_list = [serialize_doc(a) for a in db.animals.find({'status': 'Available'})]
-    return templates.TemplateResponse("ml_predictions.html", {"request": request, "animals": animals_list})
+    
+    # Check if models exist
+    likelihood_model_exists = os.path.exists(ADOPTION_LIKELIHOOD_MODEL_PATH)
+    time_model_exists = os.path.exists(TIME_TO_ADOPTION_MODEL_PATH)
+    
+    # Get model status
+    model_status = {
+        'adoption_likelihood_trained': likelihood_model_exists,
+        'time_to_adoption_trained': time_model_exists
+    }
+    
+    return templates.TemplateResponse("ml_predictions.html", {
+        "request": request, 
+        "animals": animals_list,
+        "model_status": model_status
+    })
 
 
 @router.post("/train", response_model=Dict)
@@ -55,25 +75,127 @@ async def get_all_predictions():
     for animal in animals:
         animal_doc = serialize_doc(animal)
         try:
-            likelihood = predict_adoption_likelihood(animal_doc)
-            time_to_adoption = predict_time_to_adoption(animal_doc)
+            likelihood, likelihood_importance = predict_adoption_likelihood(animal_doc, db)
+            time_to_adoption, time_importance = predict_time_to_adoption(animal_doc, db)
+            
+            # Determine priority level based on likelihood
+            priority = 'Low'
+            if likelihood:
+                if likelihood >= 0.7:
+                    priority = 'High'
+                elif likelihood >= 0.4:
+                    priority = 'Medium'
+            
             predictions.append({
                 '_id': animal_doc['_id'],
                 'name': animal_doc['name'],
                 'species': animal_doc['species'],
+                'breed': animal_doc.get('breed', 'Unknown'),
+                'age': animal_doc.get('age', 0),
+                'gender': animal_doc.get('gender', 'Unknown'),
                 'adoption_likelihood': round(likelihood * 100, 2) if likelihood else None,
-                'time_to_adoption_days': round(time_to_adoption, 1) if time_to_adoption else None
+                'time_to_adoption_days': round(time_to_adoption, 1) if time_to_adoption else None,
+                'priority': priority
             })
-        except:
+        except Exception as e:
             predictions.append({
                 '_id': animal_doc['_id'],
                 'name': animal_doc['name'],
                 'species': animal_doc['species'],
+                'breed': animal_doc.get('breed', 'Unknown'),
+                'age': animal_doc.get('age', 0),
+                'gender': animal_doc.get('gender', 'Unknown'),
                 'adoption_likelihood': None,
-                'time_to_adoption_days': None
+                'time_to_adoption_days': None,
+                'priority': 'Unknown',
+                'error': str(e)
             })
     
     return predictions
+
+
+@router.get("/feature-importance")
+async def get_feature_importance():
+    """Get feature importance from trained models"""
+    import joblib
+    
+    importance = {}
+    
+    # Try to load feature importance from saved models
+    try:
+        if os.path.exists(ADOPTION_LIKELIHOOD_MODEL_PATH):
+            model = joblib.load(ADOPTION_LIKELIHOOD_MODEL_PATH)
+            feature_names = joblib.load(FEATURE_NAMES_PATH)
+            feature_importance_dict = dict(zip(feature_names, model.feature_importances_))
+            # Map encoded names back to readable names
+            readable_names = {
+                'species_encoded': 'species',
+                'breed_encoded': 'breed',
+                'age': 'age',
+                'gender_encoded': 'gender',
+                'status_encoded': 'status',
+                'days_in_shelter': 'days_in_shelter',
+                'medical_count': 'medical_count'
+            }
+            importance['adoption_likelihood'] = {
+                readable_names.get(k, k): round(v, 4) 
+                for k, v in feature_importance_dict.items()
+            }
+    except Exception as e:
+        pass
+    
+    try:
+        if os.path.exists(TIME_TO_ADOPTION_MODEL_PATH):
+            model = joblib.load(TIME_TO_ADOPTION_MODEL_PATH)
+            # For time model, features are: species, breed, age, gender, days_in_shelter, medical_count
+            feature_names = ['species_encoded', 'breed_encoded', 'age', 'gender_encoded', 'days_in_shelter', 'medical_count']
+            feature_importance_dict = dict(zip(feature_names, model.feature_importances_))
+            readable_names = {
+                'species_encoded': 'species',
+                'breed_encoded': 'breed',
+                'age': 'age',
+                'gender_encoded': 'gender',
+                'days_in_shelter': 'days_in_shelter',
+                'medical_count': 'medical_count'
+            }
+            importance['time_to_adoption'] = {
+                readable_names.get(k, k): round(v, 4) 
+                for k, v in feature_importance_dict.items()
+            }
+    except Exception as e:
+        pass
+    
+    if not importance:
+        raise HTTPException(status_code=404, detail="Models not trained yet. Train models first.")
+    
+    return importance
+
+
+@router.get("/model-status", response_model=Dict)
+async def get_model_status():
+    """Get status of trained models"""
+    likelihood_exists = os.path.exists(ADOPTION_LIKELIHOOD_MODEL_PATH)
+    time_exists = os.path.exists(TIME_TO_ADOPTION_MODEL_PATH)
+    
+    # Get file modification times if models exist
+    likelihood_trained_date = None
+    time_trained_date = None
+    
+    if likelihood_exists:
+        likelihood_trained_date = os.path.getmtime(ADOPTION_LIKELIHOOD_MODEL_PATH)
+    if time_exists:
+        time_trained_date = os.path.getmtime(TIME_TO_ADOPTION_MODEL_PATH)
+    
+    return {
+        'adoption_likelihood': {
+            'trained': likelihood_exists,
+            'trained_date': likelihood_trained_date
+        },
+        'time_to_adoption': {
+            'trained': time_exists,
+            'trained_date': time_trained_date
+        }
+    }
 
 
 @router.get("/predict/animal/{animal_id}", response_model=Dict)
@@ -89,8 +211,8 @@ async def predict_animal(animal_id: str):
             raise HTTPException(status_code=404, detail="Animal not found")
         
         animal_doc = serialize_doc(animal)
-        likelihood = predict_adoption_likelihood(animal_doc)
-        time_to_adoption = predict_time_to_adoption(animal_doc)
+        likelihood, _ = predict_adoption_likelihood(animal_doc, db)
+        time_to_adoption, _ = predict_time_to_adoption(animal_doc, db)
         
         return {
             'animal_id': animal_id,

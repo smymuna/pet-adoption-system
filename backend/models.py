@@ -12,17 +12,21 @@ from datetime import datetime
 class AnimalCreate(BaseModel):
     name: str
     species: str
+    breed: Optional[str] = None
     age: int = Field(..., gt=0)
     gender: str
     status: str = "Available"
+    intake_date: Optional[str] = None  # YYYY-MM-DD format
 
 
 class AnimalUpdate(BaseModel):
     name: Optional[str] = None
     species: Optional[str] = None
+    breed: Optional[str] = None
     age: Optional[int] = Field(None, gt=0)
     gender: Optional[str] = None
     status: Optional[str] = None
+    intake_date: Optional[str] = None
 
 
 class AnimalResponse(BaseModel):
@@ -31,9 +35,11 @@ class AnimalResponse(BaseModel):
     id: str = Field(alias='_id', serialization_alias='_id')
     name: str
     species: str
+    breed: Optional[str] = None
     age: int
     gender: str
     status: str
+    intake_date: Optional[str] = None
 
 
 # Adopter Models
