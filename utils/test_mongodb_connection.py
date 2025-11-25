@@ -1,6 +1,6 @@
 """
 Test MongoDB Connection
-Diagnostic script to test MongoDB Atlas connection
+Diagnostic script to test local MongoDB connection
 """
 
 from pymongo import MongoClient
@@ -39,9 +39,14 @@ try:
 except Exception as e:
     print(f"\n❌ Connection failed: {e}")
     print("\n💡 Troubleshooting tips:")
-    print("   1. Check your MONGO_URI in .env file")
-    print("   2. Ensure MongoDB Atlas cluster is running (not paused)")
-    print("   3. Verify network access in MongoDB Atlas")
-    print("   4. Check if your IP is whitelisted")
+    print("   1. Ensure MongoDB is installed and running locally")
+    print("   2. Check your MONGO_URI in .env file (default: mongodb://localhost:27017/)")
+    print("   3. Verify MongoDB service is running:")
+    print("      - macOS: brew services list")
+    print("      - Linux: sudo systemctl status mongodb")
+    print("      - Windows: Check Services panel")
+    print("   4. Start MongoDB if not running:")
+    print("      - macOS: brew services start mongodb-community")
+    print("      - Linux: sudo systemctl start mongodb")
     sys.exit(1)
 

@@ -11,7 +11,7 @@ from contextlib import asynccontextmanager
 import uvicorn
 
 from backend.database.connection import get_database, close_database
-from backend.api.routes import dashboard, animals, adopters, adoptions, medical, volunteers, search, charts, ml_predictions
+from backend.api.routes import dashboard, animals, adopters, adoptions, medical, volunteers, search, charts
 
 
 @asynccontextmanager
@@ -35,7 +35,7 @@ async def lifespan(app: FastAPI):
 # Initialize FastAPI app with lifespan
 app = FastAPI(
     title="Pet Adoption & Animal Shelter Management System",
-    description="Full-stack pet adoption management system with ML predictions",
+    description="Full-stack pet adoption management system with data visualization",
     version="2.0.0",
     lifespan=lifespan
 )
@@ -78,7 +78,6 @@ async def volunteers_page_route(request: Request):
 
 app.include_router(search.router, prefix="/search", tags=["Search"])
 app.include_router(charts.router, prefix="/charts", tags=["Charts"])
-app.include_router(ml_predictions.router, prefix="/ml", tags=["ML Predictions"])
 
 # Include API routers (JSON)
 app.include_router(animals.router, prefix="/api/animals", tags=["Animals API"])
@@ -88,7 +87,6 @@ app.include_router(medical.router, prefix="/api/medical", tags=["Medical API"])
 app.include_router(volunteers.router, prefix="/api/volunteers", tags=["Volunteers API"])
 app.include_router(search.router, prefix="/api/search", tags=["Search API"])
 app.include_router(charts.router, prefix="/api/charts", tags=["Charts API"])
-app.include_router(ml_predictions.router, prefix="/api/ml", tags=["ML API"])
 
 
 @app.get("/")

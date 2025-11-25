@@ -15,7 +15,7 @@ pytest tests/integration/ -v
 echo ""
 
 echo "3. Running All Tests with Coverage..."
-pytest tests/ -v --cov=backend --cov=ml --cov-report=term-missing --cov-report=html
+pytest tests/ -v --cov=backend --cov-report=term-missing --cov-report=html
 echo ""
 
 echo "4. Test Summary..."

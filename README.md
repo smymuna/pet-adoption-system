@@ -1,13 +1,12 @@
 # Pet Adoption & Animal Shelter Management System (PASMS)
 
-A complete full-stack web application built with **FastAPI**, **MongoDB**, **HTML/CSS/JS**, and **Bootstrap 5 Admin Dashboard** with **Machine Learning** predictions.
+A complete full-stack web application built with **FastAPI**, **MongoDB**, **HTML/CSS/JS**, and **Bootstrap 5 Admin Dashboard** with data visualization.
 
 ## 🚀 Features
 
 - ✅ **Full CRUD operations** for 5 collections (Animals, Adopters, Adoptions, Medical Records, Volunteers)
 - ✅ **Search functionality** (by adopter, medical records)
-- ✅ **Data visualization** with Chart.js (Species distribution, Monthly adoptions)
-- ✅ **Machine Learning** predictions (Adoption likelihood, Time-to-adoption)
+- ✅ **Data visualization** with Chart.js (Species distribution, Monthly adoptions, Age/Gender distribution)
 - ✅ **Bootstrap 5 Admin Dashboard** with responsive sidebar navigation
 - ✅ **Automatic API documentation** (Swagger UI & ReDoc)
 
@@ -31,8 +30,7 @@ pet-adoption-system/
 │   │   ├── medical.py
 │   │   ├── volunteers.py
 │   │   ├── search.py
-│   │   ├── charts.py
-│   │   └── ml_predictions.py
+│   │   └── charts.py
 │   └── database/
 │       └── connection.py       # MongoDB connection management
 │
@@ -47,25 +45,16 @@ pet-adoption-system/
 │   │   ├── volunteers.html
 │   │   ├── search_adopter.html
 │   │   ├── search_medical.html
-│   │   ├── charts.html
-│   │   └── ml_predictions.html
+│   │   └── charts.html
 │   └── static/
 │       ├── css/
 │       │   └── style.css
 │       └── js/
 │           └── scripts.js
 │
-├── ml/                          # 🤖 MACHINE LEARNING
-│   ├── models.py               # ML model training & prediction
-│   └── saved_models/           # Trained models (.pkl files)
-│
 ├── utils/                       # 🛠️ UTILITIES
 │   ├── add_sample_data.py      # Add sample data to database
-│   ├── keep_mongodb_alive.py   # Keep MongoDB cluster active
 │   └── test_mongodb_connection.py  # Test MongoDB connection
-│
-└── docs/                        # 📚 DOCUMENTATION
-    └── MONGODB_SETUP.md        # MongoDB Atlas setup guide
 ```
 
 ## 🛠️ Setup Instructions
@@ -76,30 +65,49 @@ pet-adoption-system/
 pip install -r requirements.txt
 ```
 
-### 2. Configure MongoDB
+### 2. Install and Start MongoDB
 
-1. Create `.env` file (if not exists):
-   ```bash
-   # Copy from .env.example if available
-   ```
+**On macOS (using Homebrew):**
+```bash
+brew tap mongodb/brew
+brew install mongodb-community
+brew services start mongodb-community
+```
 
-2. Edit `.env` and add your MongoDB Atlas connection string:
-   ```env
-   MONGO_URI=mongodb+srv://username:password@cluster.mongodb.net/?retryWrites=true&w=majority
-   ```
+**On Linux (Ubuntu/Debian):**
+```bash
+sudo apt-get install -y mongodb
+sudo systemctl start mongodb
+sudo systemctl enable mongodb
+```
 
-3. Test connection:
-   ```bash
-   python utils/test_mongodb_connection.py
-   ```
+**On Windows:**
+Download and install from [MongoDB Download Center](https://www.mongodb.com/try/download/community)
 
-### 3. Add Sample Data (Optional)
+### 3. Configure MongoDB Connection (Optional)
+
+If you need to customize the connection, create a `.env` file:
+```env
+MONGO_URI=mongodb://localhost:27017/
+DB_NAME=pet_adoption
+```
+
+**Default values:**
+- `MONGO_URI`: `mongodb://localhost:27017/` (local MongoDB)
+- `DB_NAME`: `pet_adoption`
+
+### 4. Test Connection
+```bash
+python utils/test_mongodb_connection.py
+```
+
+### 5. Add Sample Data (Optional)
 
 ```bash
 python utils/add_sample_data.py
 ```
 
-### 4. Run the Application
+### 6. Run the Application
 
 **Development mode:**
 ```bash
@@ -109,11 +117,6 @@ python main.py
 **Or using uvicorn directly:**
 ```bash
 uvicorn main:app --reload --port 5001
-```
-
-**Production mode:**
-```bash
-uvicorn main:app --host 0.0.0.0 --port 5001 --workers 4
 ```
 
 ## 🌐 Access Points
@@ -163,37 +166,24 @@ uvicorn main:app --host 0.0.0.0 --port 5001 --workers 4
 - `skills` (String)
 - `availability` (String)
 
-## 🤖 Machine Learning Features
-
-The system includes two ML models:
-
-1. **Adoption Likelihood Prediction**: Predicts the probability that an animal will be adopted
-2. **Time-to-Adoption Prediction**: Predicts how many days until an animal is adopted
-
-To train the models:
-1. Ensure you have sufficient data (at least 10 animals for likelihood, 5 adoptions for time-to-adoption)
-2. Navigate to the ML Predictions page
-3. Click "Train Models"
-4. Click "Refresh Predictions" to see predictions
-
 ## 🔧 Troubleshooting
 
 ### MongoDB Connection Issues
 
-1. **Check cluster status**: Ensure your MongoDB Atlas cluster is running (not paused)
-2. **Network access**: Verify your IP is whitelisted in MongoDB Atlas
-3. **Connection string**: Ensure your MONGO_URI in `.env` is correct
-4. **Test connection**: Run `python utils/test_mongodb_connection.py`
+1. **Check MongoDB service**: Ensure MongoDB is running locally
+   - macOS: `brew services list` (should show mongodb-community as started)
+   - Linux: `sudo systemctl status mongodb`
+   - Windows: Check Services panel for MongoDB service
 
-### Keep MongoDB Active (Free Tier)
+2. **Default connection**: The app uses `mongodb://localhost:27017/` by default
+   - If MongoDB runs on a different port, set `MONGO_URI` in `.env`
 
-MongoDB Atlas free tier clusters auto-pause after inactivity. To prevent this:
+3. **Test connection**: Run `python utils/test_mongodb_connection.py`
 
-```bash
-python utils/keep_mongodb_alive.py
-```
-
-This script will ping MongoDB every 30 minutes to keep it active.
+4. **Start MongoDB manually** (if service not running):
+   - macOS: `brew services start mongodb-community`
+   - Linux: `sudo systemctl start mongodb`
+   - Or run directly: `mongod --dbpath /path/to/data`
 
 ## 📝 License
 

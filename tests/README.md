@@ -27,7 +27,6 @@ tests/
 │   ├── test_edge_cases.py        # Edge cases and corner cases
 │   └── test_api_endpoints.py     # API endpoint tests
 ├── run_tests.sh            # Test runner script
-└── TEST_REPORT.md          # Detailed test report
 ```
 
 ## Running Tests
@@ -54,7 +53,7 @@ pytest tests/unit/test_models.py::TestAnimalModels::test_animal_create_valid -v
 
 ### Run with Coverage
 ```bash
-pytest tests/ -v --cov=backend --cov=ml --cov-report=term-missing --cov-report=html
+pytest tests/ -v --cov=backend --cov-report=term-missing --cov-report=html
 ```
 
 ### Use Test Runner Script
@@ -86,7 +85,6 @@ pytest tests/ -v --cov=backend --cov=ml --cov-report=term-missing --cov-report=h
 - **Config:** 100% ✅
 - **Database Connection:** 88% ✅
 - **API Routes:** 0% (tested via integration tests)
-- **ML Models:** 0% (requires training data)
 
 ## Test Fixtures
 
