@@ -28,12 +28,11 @@
 - **Server**: Uvicorn
   - ASGI server for FastAPI
   - Hot reload for development
-  - Production-ready with worker support
 
-- **Database**: MongoDB (Atlas)
+- **Database**: MongoDB
   - NoSQL document database
   - Flexible schema for evolving data models
-  - Cloud-hosted on MongoDB Atlas
+  - Local MongoDB instance (default: `mongodb://localhost:27017/`)
   - PyMongo 4.6.0 for database operations
 
 - **Data Validation**: Pydantic 2.9.0+
@@ -165,7 +164,6 @@ pet-adoption-system/
 │
 ├── utils/                   # Utility scripts
 │   ├── add_sample_data.py  # Sample data generator
-│   ├── keep_mongodb_alive.py # MongoDB keep-alive
 │   └── test_mongodb_connection.py # Connection testing
 │
 └── tests/                   # Test suite
@@ -379,20 +377,15 @@ pet-adoption-system/
 
 ### **Local Development**
 1. Install dependencies: `pip install -r requirements.txt`
-2. Configure MongoDB: Set `MONGO_URI` in `.env`
-3. Run development server: `python main.py` or `uvicorn main:app --reload`
-4. Access application: `http://localhost:5001`
+2. Install and start MongoDB locally (default: `mongodb://localhost:27017/`)
+3. (Optional) Configure MongoDB: Set `MONGO_URI` in `.env` if using custom settings
+4. Run development server: `python main.py` or `uvicorn main:app --reload`
+5. Access application: `http://localhost:5001`
 
 ### **Testing**
 - Unit tests: `pytest tests/unit/`
 - Integration tests: `pytest tests/integration/`
 - Full test suite: `pytest tests/`
-
-### **Deployment**
-- Production server: `uvicorn main:app --host 0.0.0.0 --port 5001 --workers 4`
-- MongoDB Atlas: Cloud-hosted database
-- Static files: Served by FastAPI
-- Environment variables: Secure configuration
 
 ---
 
@@ -435,7 +428,6 @@ pet-adoption-system/
 - Machine learning-powered adoption predictions
 - Clean, maintainable codebase
 - Scalable architecture
-- Production-ready deployment
 
 The system demonstrates best practices in web development, data science, and software engineering, providing a solid foundation for animal shelter operations management.
 
