@@ -4,11 +4,25 @@ A complete full-stack web application built with **FastAPI**, **MongoDB**, **HTM
 
 ## 🚀 Features
 
-- ✅ **Full CRUD operations** for 5 collections (Animals, Adopters, Adoptions, Medical Records, Volunteers)
+- ✅ **Full CRUD operations** for 6 collections (Animals, Adopters, Adoptions, Medical Records, Volunteers, Volunteer Activities)
 - ✅ **Search functionality** (by adopter, medical records)
-- ✅ **Data visualization** with Chart.js (Species distribution, Monthly adoptions, Age/Gender distribution)
+- ✅ **Advanced data visualization** with Chart.js:
+  - Species & Breed distribution
+  - Status, Age, and Gender distribution
+  - Monthly adoption trends
+  - Adoption rate by species
+  - Medical visits over time
+  - Medical visits by species and breed
+  - **Comprehensive filtering** (species, status, gender, breed, date range)
+- ✅ **Volunteer Management System**:
+  - Assign/unassign volunteers to animals
+  - Skill-based volunteer matching
+  - Volunteer activity logging
+  - Volunteer statistics and analytics
+  - Standardized skills system (18 skill types)
 - ✅ **Bootstrap 5 Admin Dashboard** with responsive sidebar navigation
 - ✅ **Automatic API documentation** (Swagger UI & ReDoc)
+- ✅ **Interactive filtering** on all charts and animal listings
 
 ## 📁 Project Structure
 
@@ -29,8 +43,11 @@ pet-adoption-system/
 │   │   ├── adoptions.py
 │   │   ├── medical.py
 │   │   ├── volunteers.py
+│   │   ├── volunteer_activities.py
 │   │   ├── search.py
 │   │   └── charts.py
+│   ├── species_breeds.py    # Species and breed definitions
+│   └── volunteer_skills.py  # Volunteer skills definitions
 │   └── database/
 │       └── connection.py       # MongoDB connection management
 │
@@ -43,6 +60,7 @@ pet-adoption-system/
 │   │   ├── adoptions.html
 │   │   ├── medical.html
 │   │   ├── volunteers.html
+│   │   ├── volunteer_activities.html
 │   │   ├── search_adopter.html
 │   │   ├── search_medical.html
 │   │   └── charts.html
@@ -125,15 +143,39 @@ uvicorn main:app --reload --port 5001
 - **API Documentation**: http://localhost:5001/docs (Swagger UI)
 - **Alternative Docs**: http://localhost:5001/redoc (ReDoc)
 
+## 📈 Key Features Details
+
+### Data Visualization & Analytics
+- **10+ Interactive Charts** with real-time filtering
+- **Filter Support**: All charts support filtering by species, status, gender, breed, and date range
+- **Chart Types**: Pie, Doughnut, Bar, Line charts
+- **Organized Sections**: Animal Demographics, Adoption Analytics, Medical Analytics
+
+### Volunteer Management
+- **Skill-Based Matching**: Automatically suggests volunteers based on animal species and volunteer skills
+- **Activity Tracking**: Log volunteer activities (walking, feeding, grooming, training, etc.)
+- **Statistics Dashboard**: View volunteer hours, top volunteers, activity breakdowns
+- **Assignment Management**: Easy assign/unassign with visual indicators
+
+### Advanced Filtering
+- **Universal Filters**: Apply filters across all charts simultaneously
+- **Dynamic Dropdowns**: Breed dropdown updates based on selected species
+- **Date Range Filtering**: Filter time-based charts by date ranges
+- **URL Parameters**: Navigate with pre-applied filters (e.g., `/animals?status=Available`)
+
 ## 📊 MongoDB Collections Schema
 
 ### animals
 - `_id` (ObjectId)
 - `name` (String)
 - `species` (String)
+- `breed` (String, optional)
 - `age` (Number)
 - `gender` (String: Male, Female)
 - `status` (String: Available, Adopted, Medical)
+- `intake_date` (String, optional: YYYY-MM-DD)
+- `behavioral_notes` (String, optional)
+- `assigned_volunteers` (Array of ObjectId strings, optional)
 
 ### adopters
 - `_id` (ObjectId)
@@ -163,8 +205,17 @@ uvicorn main:app --reload --port 5001
 - `name` (String)
 - `phone` (String)
 - `email` (String)
-- `skills` (String)
+- `skills` (Array of Strings) - Standardized skills from volunteer_skills.py
 - `availability` (String)
+
+### volunteer_activities
+- `_id` (ObjectId)
+- `volunteer_id` (ObjectId)
+- `animal_id` (ObjectId)
+- `activity_type` (String: Walking, Feeding, Grooming, Training, etc.)
+- `activity_date` (String: YYYY-MM-DD)
+- `duration_minutes` (Number)
+- `notes` (String, optional)
 
 ## 🔧 Troubleshooting
 

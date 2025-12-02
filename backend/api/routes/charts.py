@@ -9,8 +9,10 @@ from fastapi.templating import Jinja2Templates
 from typing import Dict, Optional
 from collections import Counter, defaultdict
 from datetime import datetime
+from bson import ObjectId
 
 from backend.database.connection import get_database
+from backend.species_breeds import SPECIES_BREEDS
 
 router = APIRouter()
 templates = Jinja2Templates(directory="frontend/templates")
@@ -32,12 +34,13 @@ async def charts_page(request: Request):
         "request": request,
         "species_list": species_list,
         "status_list": status_list,
-        "gender_list": gender_list
+        "gender_list": gender_list,
+        "species_breeds": SPECIES_BREEDS
     })
 
 
 def build_animal_filter(species: Optional[str] = None, status: Optional[str] = None, 
-                       gender: Optional[str] = None):
+                       gender: Optional[str] = None, breed: Optional[str] = None):
     """Build MongoDB filter for animals based on query parameters"""
     filter_dict = {}
     
@@ -47,6 +50,8 @@ def build_animal_filter(species: Optional[str] = None, status: Optional[str] = N
         filter_dict['status'] = status
     if gender:
         filter_dict['gender'] = gender
+    if breed:
+        filter_dict['breed'] = breed
     
     return filter_dict
 
@@ -83,18 +88,56 @@ def parse_date_range(start_date: Optional[str] = None, end_date: Optional[str] =
     return start_dt, end_dt, metadata
 
 
+@router.get("/breed", response_model=Dict)
+async def get_breed_distribution(
+    species: Optional[str] = Query(None, description="Filter by species (required for breed distribution)"),
+    status: Optional[str] = Query(None, description="Filter by animal status"),
+    gender: Optional[str] = Query(None, description="Filter by gender"),
+    breed: Optional[str] = Query(None, description="Filter by breed (for consistency)")
+):
+    """Get breed distribution for a selected species with optional filters"""
+    db = get_database()
+    if db is None:
+        raise HTTPException(status_code=500, detail="Database connection failed")
+    
+    if not species:
+        return {
+            'labels': [],
+            'data': [],
+            'message': 'Please select a species to view breed distribution'
+        }
+    
+    filter_dict = build_animal_filter(species=species, status=status, gender=gender, breed=breed)
+    
+    animals = db.animals.find(filter_dict)
+    breed_count = Counter(
+        animal.get('breed', 'Unknown') 
+        for animal in animals 
+        if animal.get('breed') is not None
+    )
+    
+    # Sort by count descending
+    sorted_breeds = sorted(breed_count.items(), key=lambda x: x[1], reverse=True)
+    
+    return {
+        'labels': [item[0] for item in sorted_breeds],
+        'data': [item[1] for item in sorted_breeds]
+    }
+
+
 @router.get("/species", response_model=Dict)
 async def get_species_distribution(
     species: Optional[str] = Query(None, description="Filter by species (for consistency)"),
     status: Optional[str] = Query(None, description="Filter by animal status"),
-    gender: Optional[str] = Query(None, description="Filter by gender")
+    gender: Optional[str] = Query(None, description="Filter by gender"),
+    breed: Optional[str] = Query(None, description="Filter by breed")
 ):
     """Get animal species distribution with optional filters"""
     db = get_database()
     if db is None:
         raise HTTPException(status_code=500, detail="Database connection failed")
     
-    filter_dict = build_animal_filter(species=species, status=status, gender=gender)
+    filter_dict = build_animal_filter(species=species, status=status, gender=gender, breed=breed)
     
     animals = db.animals.find(filter_dict)
     species_count = Counter(
@@ -116,14 +159,15 @@ async def get_species_distribution(
 async def get_status_distribution(
     species: Optional[str] = Query(None, description="Filter by species"),
     status: Optional[str] = Query(None, description="Filter by status (for consistency)"),
-    gender: Optional[str] = Query(None, description="Filter by gender")
+    gender: Optional[str] = Query(None, description="Filter by gender"),
+    breed: Optional[str] = Query(None, description="Filter by breed")
 ):
     """Get animal status distribution (Available, Adopted, Medical)"""
     db = get_database()
     if db is None:
         raise HTTPException(status_code=500, detail="Database connection failed")
     
-    filter_dict = build_animal_filter(species=species, status=status, gender=gender)
+    filter_dict = build_animal_filter(species=species, status=status, gender=gender, breed=breed)
     
     animals = db.animals.find(filter_dict)
     status_count = Counter(
@@ -142,14 +186,15 @@ async def get_status_distribution(
 async def get_age_distribution(
     species: Optional[str] = Query(None, description="Filter by species"),
     status: Optional[str] = Query(None, description="Filter by status"),
-    gender: Optional[str] = Query(None, description="Filter by gender")
+    gender: Optional[str] = Query(None, description="Filter by gender"),
+    breed: Optional[str] = Query(None, description="Filter by breed")
 ):
     """Get age distribution grouped into ranges"""
     db = get_database()
     if db is None:
         raise HTTPException(status_code=500, detail="Database connection failed")
     
-    filter_dict = build_animal_filter(species=species, status=status, gender=gender)
+    filter_dict = build_animal_filter(species=species, status=status, gender=gender, breed=breed)
     
     animals = db.animals.find(filter_dict)
     
@@ -182,12 +227,20 @@ async def get_age_distribution(
 
 @router.get("/adoptions", response_model=Dict)
 async def get_monthly_adoptions(
+    species: Optional[str] = Query(None, description="Filter by species"),
+    status: Optional[str] = Query(None, description="Filter by status"),
+    gender: Optional[str] = Query(None, description="Filter by gender"),
+    breed: Optional[str] = Query(None, description="Filter by breed"),
     start_date: Optional[str] = Query(None, description="Start date (YYYY-MM-DD)"),
     end_date: Optional[str] = Query(None, description="End date (YYYY-MM-DD)")
 ):
-    """Get monthly adoption numbers with optional date range filter
+    """Get monthly adoption numbers with optional filters
     
     Parameters:
+    - species: Optional species filter
+    - status: Optional status filter
+    - gender: Optional gender filter
+    - breed: Optional breed filter
     - start_date: Optional start date filter (YYYY-MM-DD format)
     - end_date: Optional end date filter (YYYY-MM-DD format)
     
@@ -196,6 +249,15 @@ async def get_monthly_adoptions(
     db = get_database()
     if db is None:
         raise HTTPException(status_code=500, detail="Database connection failed")
+    
+    # Build animal filter
+    animal_filter = build_animal_filter(species=species, status=status, gender=gender, breed=breed)
+    
+    # Get matching animal IDs
+    matching_animals = set()
+    if animal_filter:
+        for animal in db.animals.find(animal_filter):
+            matching_animals.add(str(animal['_id']))
     
     adoptions = list(db.adoptions.find())
     monthly_count = Counter()
@@ -206,6 +268,10 @@ async def get_monthly_adoptions(
     invalid_dates = 0
     
     for adoption in adoptions:
+        # Filter by animal if filters are provided
+        if animal_filter and str(adoption.get('animal_id')) not in matching_animals:
+            continue
+        
         adoption_date = adoption.get('adoption_date', '')
         if adoption_date:
             try:
@@ -248,7 +314,8 @@ async def get_monthly_adoptions(
 async def get_adoption_rate_by_species(
     species: Optional[str] = Query(None, description="Filter by species"),
     status: Optional[str] = Query(None, description="Filter by status"),
-    gender: Optional[str] = Query(None, description="Filter by gender")
+    gender: Optional[str] = Query(None, description="Filter by gender"),
+    breed: Optional[str] = Query(None, description="Filter by breed")
 ):
     """Get adoption rate (adopted vs available) by species with optional filters"""
     db = get_database()
@@ -256,7 +323,7 @@ async def get_adoption_rate_by_species(
         raise HTTPException(status_code=500, detail="Database connection failed")
     
     # Apply filters to animals
-    filter_dict = build_animal_filter(species=species, status=status, gender=gender)
+    filter_dict = build_animal_filter(species=species, status=status, gender=gender, breed=breed)
     animals = db.animals.find(filter_dict)
     adoptions = db.adoptions.find()
     
@@ -294,14 +361,15 @@ async def get_adoption_rate_by_species(
 async def get_gender_distribution(
     species: Optional[str] = Query(None, description="Filter by species"),
     status: Optional[str] = Query(None, description="Filter by status"),
-    gender: Optional[str] = Query(None, description="Filter by gender (for consistency)")
+    gender: Optional[str] = Query(None, description="Filter by gender (for consistency)"),
+    breed: Optional[str] = Query(None, description="Filter by breed")
 ):
     """Get gender distribution"""
     db = get_database()
     if db is None:
         raise HTTPException(status_code=500, detail="Database connection failed")
     
-    filter_dict = build_animal_filter(species=species, status=status, gender=gender)
+    filter_dict = build_animal_filter(species=species, status=status, gender=gender, breed=breed)
     
     animals = db.animals.find(filter_dict)
     gender_count = Counter(
@@ -318,12 +386,20 @@ async def get_gender_distribution(
 
 @router.get("/medical-visits", response_model=Dict)
 async def get_medical_visits(
+    species: Optional[str] = Query(None, description="Filter by species"),
+    status: Optional[str] = Query(None, description="Filter by status"),
+    gender: Optional[str] = Query(None, description="Filter by gender"),
+    breed: Optional[str] = Query(None, description="Filter by breed"),
     start_date: Optional[str] = Query(None, description="Start date (YYYY-MM-DD)"),
     end_date: Optional[str] = Query(None, description="End date (YYYY-MM-DD)")
 ):
-    """Get medical visits over time
+    """Get medical visits over time with optional filters
     
     Parameters:
+    - species: Optional species filter
+    - status: Optional status filter
+    - gender: Optional gender filter
+    - breed: Optional breed filter
     - start_date: Optional start date filter (YYYY-MM-DD format)
     - end_date: Optional end date filter (YYYY-MM-DD format)
     
@@ -332,6 +408,15 @@ async def get_medical_visits(
     db = get_database()
     if db is None:
         raise HTTPException(status_code=500, detail="Database connection failed")
+    
+    # Build animal filter
+    animal_filter = build_animal_filter(species=species, status=status, gender=gender, breed=breed)
+    
+    # Get matching animal IDs
+    matching_animals = set()
+    if animal_filter:
+        for animal in db.animals.find(animal_filter):
+            matching_animals.add(str(animal['_id']))
     
     medical_records = list(db.medical_records.find())
     monthly_count = Counter()
@@ -342,6 +427,10 @@ async def get_medical_visits(
     invalid_dates = 0
     
     for record in medical_records:
+        # Filter by animal if filters are provided
+        if animal_filter and str(record.get('animal_id')) not in matching_animals:
+            continue
+        
         visit_date = record.get('visit_date', '')
         if visit_date:
             try:
@@ -379,3 +468,163 @@ async def get_medical_visits(
         'metadata': metadata
     }
 
+
+@router.get("/medical-visits-by-species", response_model=Dict)
+async def get_medical_visits_by_species(
+    species: Optional[str] = Query(None, description="Filter by species"),
+    status: Optional[str] = Query(None, description="Filter by status"),
+    gender: Optional[str] = Query(None, description="Filter by gender"),
+    breed: Optional[str] = Query(None, description="Filter by breed"),
+    start_date: Optional[str] = Query(None, description="Start date (YYYY-MM-DD)"),
+    end_date: Optional[str] = Query(None, description="End date (YYYY-MM-DD)")
+):
+    """Get medical visit frequency by species with optional filters
+    
+    Parameters:
+    - species: Optional species filter
+    - status: Optional status filter
+    - gender: Optional gender filter
+    - breed: Optional breed filter
+    - start_date: Optional start date filter (YYYY-MM-DD format)
+    - end_date: Optional end date filter (YYYY-MM-DD format)
+    
+    Returns medical visit counts grouped by species
+    """
+    db = get_database()
+    if db is None:
+        raise HTTPException(status_code=500, detail="Database connection failed")
+    
+    # Build animal filter (include species if provided, but we'll still group by all species)
+    animal_filter = build_animal_filter(species=species, status=status, gender=gender, breed=breed)
+    
+    # Get matching animal IDs
+    matching_animals = set()
+    if animal_filter:
+        for animal in db.animals.find(animal_filter):
+            matching_animals.add(str(animal['_id']))
+    
+    medical_records = list(db.medical_records.find())
+    species_count = Counter()
+    
+    start_dt, end_dt, date_metadata = parse_date_range(start_date, end_date)
+    
+    for record in medical_records:
+        # Filter by animal if filters are provided
+        if animal_filter and str(record.get('animal_id')) not in matching_animals:
+            continue
+        
+        visit_date = record.get('visit_date', '')
+        animal_id = record.get('animal_id')
+        
+        # Apply date filter if provided
+        if visit_date:
+            try:
+                date_obj = datetime.strptime(str(visit_date), '%Y-%m-%d')
+                if start_dt and date_obj < start_dt:
+                    continue
+                if end_dt and date_obj > end_dt:
+                    continue
+            except (ValueError, TypeError):
+                continue
+        
+        # Get animal species
+        if animal_id:
+            try:
+                animal = db.animals.find_one({'_id': ObjectId(animal_id)})
+                if animal:
+                    species_name = animal.get('species', 'Unknown')
+                    species_count[species_name] += 1
+            except Exception:
+                continue
+    
+    # Sort by count descending
+    sorted_species = sorted(species_count.items(), key=lambda x: x[1], reverse=True)
+    
+    return {
+        'labels': [item[0] for item in sorted_species],
+        'data': [item[1] for item in sorted_species]
+    }
+
+
+@router.get("/medical-visits-by-breed", response_model=Dict)
+async def get_medical_visits_by_breed(
+    species: Optional[str] = Query(None, description="Filter by species (required for breed distribution)"),
+    status: Optional[str] = Query(None, description="Filter by status"),
+    gender: Optional[str] = Query(None, description="Filter by gender"),
+    breed: Optional[str] = Query(None, description="Filter by breed (for consistency)"),
+    start_date: Optional[str] = Query(None, description="Start date (YYYY-MM-DD)"),
+    end_date: Optional[str] = Query(None, description="End date (YYYY-MM-DD)")
+):
+    """Get medical visit frequency by breed for a selected species with optional filters
+    
+    Parameters:
+    - species: Required species filter
+    - status: Optional status filter
+    - gender: Optional gender filter
+    - breed: Optional breed filter (for consistency)
+    - start_date: Optional start date filter (YYYY-MM-DD format)
+    - end_date: Optional end date filter (YYYY-MM-DD format)
+    
+    Returns medical visit counts grouped by breed for the selected species
+    """
+    db = get_database()
+    if db is None:
+        raise HTTPException(status_code=500, detail="Database connection failed")
+    
+    if not species:
+        return {
+            'labels': [],
+            'data': [],
+            'message': 'Please select a species to view medical visits by breed'
+        }
+    
+    # Build animal filter
+    animal_filter = build_animal_filter(species=species, status=status, gender=gender, breed=breed)
+    
+    # Get matching animal IDs
+    matching_animals = set()
+    if animal_filter:
+        for animal in db.animals.find(animal_filter):
+            matching_animals.add(str(animal['_id']))
+    
+    medical_records = list(db.medical_records.find())
+    breed_count = Counter()
+    
+    start_dt, end_dt, date_metadata = parse_date_range(start_date, end_date)
+    
+    for record in medical_records:
+        # Filter by animal if filters are provided
+        if animal_filter and str(record.get('animal_id')) not in matching_animals:
+            continue
+        
+        visit_date = record.get('visit_date', '')
+        animal_id = record.get('animal_id')
+        
+        # Apply date filter if provided
+        if visit_date:
+            try:
+                date_obj = datetime.strptime(str(visit_date), '%Y-%m-%d')
+                if start_dt and date_obj < start_dt:
+                    continue
+                if end_dt and date_obj > end_dt:
+                    continue
+            except (ValueError, TypeError):
+                continue
+        
+        # Get animal breed for selected species
+        if animal_id:
+            try:
+                animal = db.animals.find_one({'_id': ObjectId(animal_id)})
+                if animal and animal.get('species') == species:
+                    breed_name = animal.get('breed', 'Unknown')
+                    breed_count[breed_name] += 1
+            except Exception:
+                continue
+    
+    # Sort by count descending
+    sorted_breeds = sorted(breed_count.items(), key=lambda x: x[1], reverse=True)
+    
+    return {
+        'labels': [item[0] for item in sorted_breeds],
+        'data': [item[1] for item in sorted_breeds]
+    }

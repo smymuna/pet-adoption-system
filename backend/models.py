@@ -4,7 +4,7 @@ Data validation schemas for API requests and responses
 """
 
 from pydantic import BaseModel, EmailStr, Field, ConfigDict
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
 
 
@@ -43,6 +43,7 @@ class AnimalResponse(BaseModel):
     status: str
     intake_date: Optional[str] = None
     behavioral_notes: Optional[str] = None
+    assigned_volunteers: Optional[List[str]] = None
 
 
 # Adopter Models
@@ -131,7 +132,7 @@ class VolunteerCreate(BaseModel):
     name: str
     phone: str
     email: EmailStr
-    skills: str
+    skills: List[str]  # Changed to list for multiple skills
     availability: str
 
 
@@ -139,8 +140,52 @@ class VolunteerUpdate(BaseModel):
     name: Optional[str] = None
     phone: Optional[str] = None
     email: Optional[EmailStr] = None
-    skills: Optional[str] = None
+    skills: Optional[List[str]] = None  # Changed to list
     availability: Optional[str] = None
+
+
+# Volunteer Activity Models
+class VolunteerActivityCreate(BaseModel):
+    volunteer_id: str
+    animal_id: str
+    activity_type: str
+    activity_date: str  # YYYY-MM-DD format
+    duration_minutes: int = Field(..., gt=0)
+    notes: Optional[str] = None
+
+
+class VolunteerActivityUpdate(BaseModel):
+    volunteer_id: Optional[str] = None
+    animal_id: Optional[str] = None
+    activity_type: Optional[str] = None
+    activity_date: Optional[str] = None
+    duration_minutes: Optional[int] = Field(None, gt=0)
+    notes: Optional[str] = None
+
+
+class VolunteerActivityResponse(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+    
+    id: str = Field(alias='_id', serialization_alias='_id')
+    volunteer_id: str
+    animal_id: str
+    activity_type: str
+    activity_date: str
+    duration_minutes: int
+    notes: Optional[str] = None
+
+
+# Volunteer Assignment Models
+class VolunteerAssignmentCreate(BaseModel):
+    animal_id: str
+    volunteer_id: str
+
+
+class VolunteerAssignmentResponse(BaseModel):
+    success: bool
+    message: str
+    animal_id: str
+    volunteer_id: str
 
 
 class VolunteerResponse(BaseModel):
@@ -150,7 +195,7 @@ class VolunteerResponse(BaseModel):
     name: str
     phone: str
     email: str
-    skills: str
+    skills: List[str]  # Changed to list for multiple skills
     availability: str
 
 

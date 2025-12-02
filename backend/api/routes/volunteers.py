@@ -11,6 +11,7 @@ from typing import List
 
 from backend.database.connection import get_database, serialize_doc
 from backend.models import VolunteerCreate, VolunteerUpdate, VolunteerResponse, SuccessResponse
+from backend.volunteer_skills import VOLUNTEER_SKILLS
 
 router = APIRouter()
 templates = Jinja2Templates(directory="frontend/templates")
@@ -23,8 +24,21 @@ async def volunteers_page(request: Request):
     if db is None:
         raise HTTPException(status_code=500, detail="Database connection failed")
     
-    volunteers_list = [serialize_doc(v) for v in db.volunteers.find()]
-    return templates.TemplateResponse("volunteers.html", {"request": request, "volunteers": volunteers_list})
+    volunteers_list = []
+    for v in db.volunteers.find():
+        volunteer_doc = serialize_doc(v)
+        # Convert skills to list if it's a string (backward compatibility)
+        if isinstance(volunteer_doc.get('skills'), str):
+            volunteer_doc['skills'] = [volunteer_doc['skills']]
+        elif volunteer_doc.get('skills') is None:
+            volunteer_doc['skills'] = []
+        volunteers_list.append(volunteer_doc)
+    
+    return templates.TemplateResponse("volunteers.html", {
+        "request": request, 
+        "volunteers": volunteers_list,
+        "volunteer_skills": VOLUNTEER_SKILLS
+    })
 
 
 @router.get("", response_model=List[VolunteerResponse])
@@ -34,7 +48,15 @@ async def get_volunteers():
     if db is None:
         raise HTTPException(status_code=500, detail="Database connection failed")
     
-    volunteers_list = [serialize_doc(v) for v in db.volunteers.find()]
+    volunteers_list = []
+    for v in db.volunteers.find():
+        volunteer_doc = serialize_doc(v)
+        # Convert skills to list if it's a string (backward compatibility)
+        if isinstance(volunteer_doc.get('skills'), str):
+            volunteer_doc['skills'] = [volunteer_doc['skills']]
+        elif volunteer_doc.get('skills') is None:
+            volunteer_doc['skills'] = []
+        volunteers_list.append(volunteer_doc)
     return volunteers_list
 
 

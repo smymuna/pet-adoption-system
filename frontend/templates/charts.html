@@ -41,6 +41,13 @@
                         </select>
                     </div>
                     <div class="col-md-3">
+                        <label for="filterBreed" class="form-label">Breed</label>
+                        <select class="form-select" id="filterBreed">
+                            <option value="">All Breeds</option>
+                        </select>
+                        <small class="form-text text-muted">Select species first</small>
+                    </div>
+                    <div class="col-md-3">
                         <label for="filterStartDate" class="form-label">Start Date</label>
                         <input type="date" class="form-control" id="filterStartDate">
                     </div>
@@ -62,87 +69,135 @@
     </div>
 </div>
 
-<!-- Charts Row 1 -->
-<div class="row mb-4">
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0"><i class="bi bi-pie-chart"></i> Species Distribution</h5>
+<!-- Animal Demographics Section -->
+<div class="mb-5">
+    <div class="d-flex align-items-center mb-3">
+        <h4 class="mb-0 me-3"><i class="bi bi-diagram-3"></i> Animal Demographics</h4>
+        <hr class="flex-grow-1 my-0">
+    </div>
+    <div class="row mb-4">
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-pie-chart"></i> Species Distribution</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="speciesChart" height="300"></canvas>
+                </div>
             </div>
-            <div class="card-body">
-                <canvas id="speciesChart" height="300"></canvas>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-pie-chart"></i> Breed Distribution</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="breedChart" height="300"></canvas>
+                </div>
             </div>
         </div>
     </div>
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0"><i class="bi bi-pie-chart-fill"></i> Status Distribution</h5>
-            </div>
-            <div class="card-body">
-                <canvas id="statusChart" height="300"></canvas>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Charts Row 2 -->
-<div class="row mb-4">
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0"><i class="bi bi-bar-chart"></i> Age Distribution</h5>
-            </div>
-            <div class="card-body">
-                <canvas id="ageChart" height="300"></canvas>
+    <div class="row mb-4">
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-pie-chart-fill"></i> Status Distribution</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="statusChart" height="300"></canvas>
+                </div>
             </div>
         </div>
-    </div>
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0"><i class="bi bi-pie-chart"></i> Gender Distribution</h5>
-            </div>
-            <div class="card-body">
-                <canvas id="genderChart" height="300"></canvas>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Charts Row 3 -->
-<div class="row mb-4">
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0"><i class="bi bi-graph-up"></i> Monthly Adoptions</h5>
-            </div>
-            <div class="card-body">
-                <canvas id="adoptionsChart" height="300"></canvas>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-bar-chart"></i> Age Distribution</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="ageChart" height="300"></canvas>
+                </div>
             </div>
         </div>
-    </div>
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0"><i class="bi bi-bar-chart-fill"></i> Adoption Rate by Species</h5>
-            </div>
-            <div class="card-body">
-                <canvas id="adoptionRateChart" height="300"></canvas>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-pie-chart"></i> Gender Distribution</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="genderChart" height="300"></canvas>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Charts Row 4 -->
-<div class="row mb-4">
-    <div class="col-md-12">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0"><i class="bi bi-hospital"></i> Medical Visits Over Time</h5>
+<!-- Adoption Analytics Section -->
+<div class="mb-5">
+    <div class="d-flex align-items-center mb-3">
+        <h4 class="mb-0 me-3"><i class="bi bi-heart"></i> Adoption Analytics</h4>
+        <hr class="flex-grow-1 my-0">
+    </div>
+    <div class="row mb-4">
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-graph-up"></i> Monthly Adoptions</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="adoptionsChart" height="300"></canvas>
+                </div>
             </div>
-            <div class="card-body">
-                <canvas id="medicalChart" height="100"></canvas>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-bar-chart-fill"></i> Adoption Rate by Species</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="adoptionRateChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Medical Analytics Section -->
+<div class="mb-5">
+    <div class="d-flex align-items-center mb-3">
+        <h4 class="mb-0 me-3"><i class="bi bi-hospital"></i> Medical Analytics</h4>
+        <hr class="flex-grow-1 my-0">
+    </div>
+    <div class="row mb-4">
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-hospital"></i> Medical Visits Over Time</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="medicalChart" height="300" style="display: none;"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-bar-chart"></i> Medical Visits by Species</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="medicalBySpeciesChart" height="300" style="display: none;"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row mb-4">
+        <div class="col-md-12 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-pie-chart"></i> Medical Visits by Breed</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="medicalByBreedChart" height="300" style="display: none;"></canvas>
+                </div>
             </div>
         </div>
     </div>
@@ -154,7 +209,10 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
 // Chart instances
-let speciesChart, statusChart, ageChart, genderChart, adoptionsChart, adoptionRateChart, medicalChart;
+let speciesChart, statusChart, ageChart, genderChart, adoptionsChart, adoptionRateChart, medicalChart, breedChart, medicalBySpeciesChart, medicalByBreedChart;
+
+// Species-Breed mapping
+const speciesBreeds = {{ species_breeds | tojson }};
 
 // Color palettes
 const colors = {
@@ -163,12 +221,49 @@ const colors = {
     gender: ['#36A2EB', '#FF6384']
 };
 
+// Update breed dropdown based on selected species
+function updateBreedDropdown() {
+    const speciesSelect = document.getElementById('filterSpecies');
+    const breedSelect = document.getElementById('filterBreed');
+    const selectedSpecies = speciesSelect.value;
+    
+    breedSelect.innerHTML = '<option value="">All Breeds</option>';
+    
+    if (selectedSpecies && speciesBreeds[selectedSpecies]) {
+        speciesBreeds[selectedSpecies].forEach(breed => {
+            const option = document.createElement('option');
+            option.value = breed;
+            option.textContent = breed;
+            breedSelect.appendChild(option);
+        });
+    }
+}
+
+// Initialize breed dropdown on species change and auto-load breed chart
+document.getElementById('filterSpecies').addEventListener('change', function() {
+    updateBreedDropdown();
+    // Reset breed selection when species changes
+    document.getElementById('filterBreed').value = '';
+    // Automatically load breed chart and medical by breed chart when species is selected
+    const filters = getFilters();
+    loadBreedChart(filters);
+    loadMedicalByBreedChart(filters);
+});
+
+// Auto-update breed chart and medical by breed chart when breed filter changes
+document.getElementById('filterBreed').addEventListener('change', function() {
+    const filters = getFilters();
+    loadBreedChart(filters);
+    loadMedicalByBreedChart(filters);
+});
+
 // Get filter values
 function getFilters() {
     return {
         species: document.getElementById('filterSpecies').value,
         status: document.getElementById('filterStatus').value,
         gender: document.getElementById('filterGender').value,
+        breed: document.getElementById('filterBreed').value,
         start_date: document.getElementById('filterStartDate').value,
         end_date: document.getElementById('filterEndDate').value
     };
@@ -177,11 +272,13 @@ function getFilters() {
 // Build query string from filters
 function buildQueryString(filters, chartType = '') {
     const params = new URLSearchParams();
+    // Apply all animal filters to all charts
     if (filters.species) params.append('species', filters.species);
     if (filters.status) params.append('status', filters.status);
     if (filters.gender) params.append('gender', filters.gender);
+    if (filters.breed) params.append('breed', filters.breed);
     
-    // Date filters only for time-based charts
+    // Date filters for time-based and medical charts
     if (chartType === 'time' || chartType === 'medical') {
         if (filters.start_date) params.append('start_date', filters.start_date);
         if (filters.end_date) params.append('end_date', filters.end_date);
@@ -190,186 +287,287 @@ function buildQueryString(filters, chartType = '') {
     return params.toString();
 }
 
+// Show loading indicator for a chart
+function showChartLoading(chartId, message = 'Loading chart data...') {
+    const canvas = document.getElementById(chartId);
+    if (!canvas) {
+        console.warn(`Canvas element ${chartId} not found`);
+        return null;
+    }
+    const cardBody = canvas.closest('.card-body');
+    if (!cardBody) {
+        console.warn(`Card body not found for ${chartId}`);
+        return null;
+    }
+    
+    // Remove existing loading indicator
+    const existingLoading = cardBody.querySelector(`#${chartId}Loading`);
+    if (existingLoading) existingLoading.remove();
+    
+    // Hide canvas while loading
+    canvas.style.display = 'none';
+    
+    const loadingMsg = document.createElement('div');
+    loadingMsg.className = 'chart-message alert alert-secondary text-center';
+    loadingMsg.id = `${chartId}Loading`;
+    loadingMsg.innerHTML = `
+        <div class="spinner-border spinner-border-sm me-2" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <strong>${message}</strong>
+    `;
+    cardBody.insertBefore(loadingMsg, canvas);
+    return loadingMsg;
+}
+
+// Remove loading indicator for a chart
+function removeChartLoading(chartId) {
+    const loadingMsg = document.getElementById(`${chartId}Loading`);
+    if (loadingMsg) loadingMsg.remove();
+    
+    // Show canvas again
+    const canvas = document.getElementById(chartId);
+    if (canvas) {
+        canvas.style.display = ''; // Restore default display
+    }
+}
+
 // Load and render all charts
 async function loadCharts() {
     const filters = getFilters();
     
-    // Species Distribution
-    await loadSpeciesChart(filters);
+    // Wait for DOM to be ready before showing loading indicators
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+            loadCharts();
+        });
+        return;
+    }
     
-    // Status Distribution
-    await loadStatusChart(filters);
+    // Show loading indicators
+    showChartLoading('speciesChart', 'Loading species distribution...');
+    showChartLoading('statusChart', 'Loading status distribution...');
+    showChartLoading('ageChart', 'Loading age distribution...');
+    showChartLoading('genderChart', 'Loading gender distribution...');
+    showChartLoading('adoptionsChart', 'Loading adoption trends...');
+    showChartLoading('adoptionRateChart', 'Loading adoption rates...');
+    showChartLoading('medicalChart', 'Loading medical visits...');
+    showChartLoading('medicalBySpeciesChart', 'Loading medical visits by species...');
+    showChartLoading('medicalByBreedChart', 'Loading medical visits by breed...');
     
-    // Age Distribution
-    await loadAgeChart(filters);
-    
-    // Gender Distribution
-    await loadGenderChart(filters);
-    
-    // Monthly Adoptions
-    await loadAdoptionsChart(filters);
-    
-    // Adoption Rate by Species
-    await loadAdoptionRateChart();
-    
-    // Medical Visits
-    await loadMedicalChart(filters);
+    // Load all charts in parallel for better performance
+    try {
+        await Promise.all([
+            loadSpeciesChart(filters),
+            loadStatusChart(filters),
+            loadAgeChart(filters),
+            loadGenderChart(filters),
+            loadAdoptionsChart(filters),
+            loadAdoptionRateChart(filters),
+            loadMedicalChart(filters),
+            loadBreedChart(filters),
+            loadMedicalBySpeciesChart(filters),
+            loadMedicalByBreedChart(filters)
+        ]);
+    } catch (error) {
+        console.error('Error loading charts:', error);
+    }
 }
 
 // Species Chart
 async function loadSpeciesChart(filters) {
-    const query = buildQueryString(filters);
-    const url = `/api/charts/species${query ? '?' + query : ''}`;
-    const data = await fetch(url).then(r => r.json());
+    try {
+        const query = buildQueryString(filters);
+        const url = `/api/charts/species${query ? '?' + query : ''}`;
+        const data = await fetch(url).then(r => r.json());
+        
+        removeChartLoading('speciesChart');
+        
+        const ctx = document.getElementById('speciesChart').getContext('2d');
+        
+        if (speciesChart) speciesChart.destroy();
+        
+        // Ensure canvas is visible
+        ctx.canvas.style.display = '';
     
-    const ctx = document.getElementById('speciesChart').getContext('2d');
-    
-    if (speciesChart) speciesChart.destroy();
-    
-    speciesChart = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            labels: data.labels,
-            datasets: [{
-                data: data.data,
-                backgroundColor: colors.primary.slice(0, data.labels.length),
-                borderWidth: 2
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            plugins: {
-                legend: {
-                    position: 'right'
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                            const percentage = ((context.parsed / total) * 100).toFixed(1);
-                            return `${context.label}: ${context.parsed} (${percentage}%)`;
+        speciesChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    data: data.data,
+                    backgroundColor: colors.primary.slice(0, data.labels.length),
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        position: 'right'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = ((context.parsed / total) * 100).toFixed(1);
+                                return `${context.label}: ${context.parsed} (${percentage}%)`;
+                            }
                         }
                     }
                 }
             }
-        }
-    });
+        });
+    } catch (error) {
+        removeChartLoading('speciesChart');
+        console.error('Error loading species chart:', error);
+    }
 }
 
 // Status Chart
 async function loadStatusChart(filters) {
-    const query = buildQueryString(filters);
-    const url = `/api/charts/status${query ? '?' + query : ''}`;
-    const data = await fetch(url).then(r => r.json());
-    
-    const ctx = document.getElementById('statusChart').getContext('2d');
-    
-    if (statusChart) statusChart.destroy();
-    
-    statusChart = new Chart(ctx, {
-        type: 'pie',
-        data: {
-            labels: data.labels,
-            datasets: [{
-                data: data.data,
-                backgroundColor: colors.status.slice(0, data.labels.length),
-                borderWidth: 2
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            plugins: {
-                legend: {
-                    position: 'right'
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                            const percentage = ((context.parsed / total) * 100).toFixed(1);
-                            return `${context.label}: ${context.parsed} (${percentage}%)`;
+    try {
+        const query = buildQueryString(filters);
+        const url = `/api/charts/status${query ? '?' + query : ''}`;
+        const data = await fetch(url).then(r => r.json());
+        
+        removeChartLoading('statusChart');
+        
+        const ctx = document.getElementById('statusChart').getContext('2d');
+        
+        if (statusChart) statusChart.destroy();
+        
+        // Ensure canvas is visible
+        ctx.canvas.style.display = '';
+        
+        statusChart = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    data: data.data,
+                    backgroundColor: colors.status.slice(0, data.labels.length),
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        position: 'right'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = ((context.parsed / total) * 100).toFixed(1);
+                                return `${context.label}: ${context.parsed} (${percentage}%)`;
+                            }
                         }
                     }
                 }
             }
-        }
-    });
+        });
+    } catch (error) {
+        removeChartLoading('statusChart');
+        console.error('Error loading status chart:', error);
+    }
 }
 
 // Age Chart
 async function loadAgeChart(filters) {
-    const query = buildQueryString(filters);
-    const url = `/api/charts/age-distribution${query ? '?' + query : ''}`;
-    const data = await fetch(url).then(r => r.json());
+    try {
+        const query = buildQueryString(filters);
+        const url = `/api/charts/age-distribution${query ? '?' + query : ''}`;
+        const data = await fetch(url).then(r => r.json());
+        
+        removeChartLoading('ageChart');
+        
+        const ctx = document.getElementById('ageChart').getContext('2d');
+        
+        if (ageChart) ageChart.destroy();
+        
+        // Ensure canvas is visible
+        ctx.canvas.style.display = '';
     
-    const ctx = document.getElementById('ageChart').getContext('2d');
-    
-    if (ageChart) ageChart.destroy();
-    
-    ageChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: data.labels,
-            datasets: [{
-                label: 'Number of Animals',
-                data: data.data,
-                backgroundColor: '#36A2EB',
-                borderColor: '#1E88E5',
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        stepSize: 1
+        ageChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    label: 'Number of Animals',
+                    data: data.data,
+                    backgroundColor: '#36A2EB',
+                    borderColor: '#1E88E5',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
                     }
                 }
-            },
-            plugins: {
-                legend: {
-                    display: false
-                }
             }
-        }
-    });
+        });
+    } catch (error) {
+        removeChartLoading('ageChart');
+        console.error('Error loading age chart:', error);
+    }
 }
 
 // Gender Chart
 async function loadGenderChart(filters) {
-    const query = buildQueryString(filters);
-    const url = `/api/charts/gender-distribution${query ? '?' + query : ''}`;
-    const data = await fetch(url).then(r => r.json());
-    
-    const ctx = document.getElementById('genderChart').getContext('2d');
-    
-    if (genderChart) genderChart.destroy();
-    
-    genderChart = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            labels: data.labels,
-            datasets: [{
-                data: data.data,
-                backgroundColor: colors.gender,
-                borderWidth: 2
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            plugins: {
-                legend: {
-                    position: 'right'
+    try {
+        const query = buildQueryString(filters);
+        const url = `/api/charts/gender-distribution${query ? '?' + query : ''}`;
+        const data = await fetch(url).then(r => r.json());
+        
+        removeChartLoading('genderChart');
+        
+        const ctx = document.getElementById('genderChart').getContext('2d');
+        
+        if (genderChart) genderChart.destroy();
+        
+        // Ensure canvas is visible
+        ctx.canvas.style.display = '';
+        
+        genderChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    data: data.data,
+                    backgroundColor: colors.gender,
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        position: 'right'
+                    }
                 }
             }
-        }
-    });
+        });
+    } catch (error) {
+        removeChartLoading('genderChart');
+        console.error('Error loading gender chart:', error);
+    }
 }
 
 // Adoptions Chart
@@ -380,6 +578,8 @@ async function loadAdoptionsChart(filters) {
     try {
         const response = await fetch(url);
         const data = await response.json();
+        
+        removeChartLoading('adoptionsChart');
         
         const ctx = document.getElementById('adoptionsChart').getContext('2d');
         const cardBody = ctx.canvas.closest('.card-body');
@@ -412,6 +612,9 @@ async function loadAdoptionsChart(filters) {
         }
         
         if (adoptionsChart) adoptionsChart.destroy();
+        
+        // Ensure canvas is visible
+        ctx.canvas.style.display = '';
         
         adoptionsChart = new Chart(ctx, {
             type: 'line',
@@ -452,6 +655,7 @@ async function loadAdoptionsChart(filters) {
             }
         });
     } catch (error) {
+        removeChartLoading('adoptionsChart');
         console.error('Error loading adoptions chart:', error);
         const ctx = document.getElementById('adoptionsChart').getContext('2d');
         const cardBody = ctx.canvas.closest('.card-body');
@@ -463,14 +667,22 @@ async function loadAdoptionsChart(filters) {
 }
 
 // Adoption Rate Chart
-async function loadAdoptionRateChart() {
-    const data = await fetch('/api/charts/adoption-rate').then(r => r.json());
-    
-    const ctx = document.getElementById('adoptionRateChart').getContext('2d');
-    
-    if (adoptionRateChart) adoptionRateChart.destroy();
-    
-    adoptionRateChart = new Chart(ctx, {
+async function loadAdoptionRateChart(filters) {
+    try {
+        const query = buildQueryString(filters);
+        const url = `/api/charts/adoption-rate${query ? '?' + query : ''}`;
+        const data = await fetch(url).then(r => r.json());
+        
+        removeChartLoading('adoptionRateChart');
+        
+        const ctx = document.getElementById('adoptionRateChart').getContext('2d');
+        
+        if (adoptionRateChart) adoptionRateChart.destroy();
+        
+        // Ensure canvas is visible
+        ctx.canvas.style.display = '';
+        
+        adoptionRateChart = new Chart(ctx, {
         type: 'bar',
         data: {
             labels: data.labels,
@@ -478,15 +690,15 @@ async function loadAdoptionRateChart() {
                 {
                     label: 'Adopted',
                     data: data.adopted,
-                    backgroundColor: '#28a745',
-                    borderColor: '#1e7e34',
+                    backgroundColor: '#ffc107',
+                    borderColor: '#e0a800',
                     borderWidth: 1
                 },
                 {
                     label: 'Available',
                     data: data.available,
-                    backgroundColor: '#ffc107',
-                    borderColor: '#e0a800',
+                    backgroundColor: '#28a745',
+                    borderColor: '#1e7e34',
                     borderWidth: 1
                 }
             ]
@@ -514,6 +726,10 @@ async function loadAdoptionRateChart() {
             }
         }
     });
+    } catch (error) {
+        removeChartLoading('adoptionRateChart');
+        console.error('Error loading adoption rate chart:', error);
+    }
 }
 
 // Medical Chart
@@ -524,6 +740,8 @@ async function loadMedicalChart(filters) {
     try {
         const response = await fetch(url);
         const data = await response.json();
+        
+        removeChartLoading('medicalChart');
         
         const ctx = document.getElementById('medicalChart').getContext('2d');
         const cardBody = ctx.canvas.closest('.card-body');
@@ -556,6 +774,9 @@ async function loadMedicalChart(filters) {
         }
         
         if (medicalChart) medicalChart.destroy();
+        
+        // Ensure canvas is visible
+        ctx.canvas.style.display = '';
         
         medicalChart = new Chart(ctx, {
             type: 'line',
@@ -597,7 +818,200 @@ async function loadMedicalChart(filters) {
         });
     } catch (error) {
         console.error('Error loading medical chart:', error);
+        removeChartLoading('medicalChart');
         const ctx = document.getElementById('medicalChart').getContext('2d');
+        const cardBody = ctx.canvas.closest('.card-body');
+        const msg = document.createElement('div');
+        msg.className = 'chart-message alert alert-danger';
+        msg.textContent = 'Error loading chart: ' + error.message;
+        cardBody.insertBefore(msg, ctx.canvas);
+    }
+}
+
+// Load medical visits by species chart
+async function loadMedicalBySpeciesChart(filters) {
+    const query = buildQueryString(filters, 'medical');
+    const url = `/api/charts/medical-visits-by-species${query ? '?' + query : ''}`;
+    
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        removeChartLoading('medicalBySpeciesChart');
+        
+        const ctx = document.getElementById('medicalBySpeciesChart').getContext('2d');
+        const cardBody = ctx.canvas.closest('.card-body');
+        
+        // Clear any existing messages
+        const existingMsg = cardBody.querySelector('.chart-message');
+        if (existingMsg) existingMsg.remove();
+        
+        // Check if we have data
+        if (!data.labels || data.labels.length === 0 || !data.data || data.data.length === 0) {
+            if (medicalBySpeciesChart) medicalBySpeciesChart.destroy();
+            
+            const msg = document.createElement('div');
+            msg.className = 'chart-message alert alert-info';
+            msg.innerHTML = `
+                <strong>No Data Available</strong><br>
+                <small>No medical visits found for the selected filters.</small>
+            `;
+            cardBody.insertBefore(msg, ctx.canvas);
+            return;
+        }
+        
+        if (medicalBySpeciesChart) medicalBySpeciesChart.destroy();
+        
+        // Ensure canvas is visible
+        ctx.canvas.style.display = '';
+        
+        medicalBySpeciesChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    label: 'Medical Visits',
+                    data: data.data,
+                    backgroundColor: [
+                        '#dc3545',
+                        '#fd7e14',
+                        '#ffc107',
+                        '#28a745',
+                        '#20c997',
+                        '#17a2b8',
+                        '#6f42c1',
+                        '#e83e8c',
+                        '#6c757d',
+                        '#343a40'
+                    ],
+                    borderColor: '#fff',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Error loading medical visits by species chart:', error);
+        removeChartLoading('medicalBySpeciesChart');
+        const ctx = document.getElementById('medicalBySpeciesChart').getContext('2d');
+        const cardBody = ctx.canvas.closest('.card-body');
+        const msg = document.createElement('div');
+        msg.className = 'chart-message alert alert-danger';
+        msg.textContent = 'Error loading chart: ' + error.message;
+        cardBody.insertBefore(msg, ctx.canvas);
+    }
+}
+
+// Load medical visits by breed chart
+async function loadMedicalByBreedChart(filters) {
+    const query = buildQueryString(filters, 'medical');
+    const url = `/api/charts/medical-visits-by-breed${query ? '?' + query : ''}`;
+    
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        removeChartLoading('medicalByBreedChart');
+        
+        const ctx = document.getElementById('medicalByBreedChart').getContext('2d');
+        const cardBody = ctx.canvas.closest('.card-body');
+        
+        // Clear any existing messages
+        const existingMsg = cardBody.querySelector('.chart-message');
+        if (existingMsg) existingMsg.remove();
+        
+        // Check if we have data
+        if (!data.labels || data.labels.length === 0 || !data.data || data.data.length === 0) {
+            if (medicalByBreedChart) medicalByBreedChart.destroy();
+            
+            const msg = document.createElement('div');
+            msg.className = 'chart-message alert alert-info';
+            msg.innerHTML = `
+                <strong>No Data Available</strong><br>
+                <small>${data.message || 'Please select a species to view medical visits by breed.'}</small>
+            `;
+            cardBody.insertBefore(msg, ctx.canvas);
+            return;
+        }
+        
+        if (medicalByBreedChart) medicalByBreedChart.destroy();
+        
+        // Ensure canvas is visible
+        ctx.canvas.style.display = '';
+        
+        medicalByBreedChart = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    label: 'Medical Visits',
+                    data: data.data,
+                    backgroundColor: [
+                        '#dc3545',
+                        '#fd7e14',
+                        '#ffc107',
+                        '#28a745',
+                        '#20c997',
+                        '#17a2b8',
+                        '#6f42c1',
+                        '#e83e8c',
+                        '#6c757d',
+                        '#343a40',
+                        '#f8d7da',
+                        '#d4edda',
+                        '#d1ecf1',
+                        '#d6f5d6',
+                        '#fff3cd'
+                    ],
+                    borderColor: '#fff',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.parsed || 0;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = ((value / total) * 100).toFixed(1);
+                                return `${label}: ${value} (${percentage}%)`;
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'right'
+                    }
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Error loading medical visits by breed chart:', error);
+        removeChartLoading('medicalByBreedChart');
+        const ctx = document.getElementById('medicalByBreedChart').getContext('2d');
         const cardBody = ctx.canvas.closest('.card-body');
         const msg = document.createElement('div');
         msg.className = 'chart-message alert alert-danger';
@@ -611,17 +1025,135 @@ function applyFilters() {
     loadCharts();
 }
 
+// Breed Chart
+async function loadBreedChart(filters) {
+    const ctx = document.getElementById('breedChart').getContext('2d');
+    const cardBody = ctx.canvas.closest('.card-body');
+    
+    // Clear any existing messages
+    const existingMsg = cardBody.querySelector('.chart-message');
+    if (existingMsg) existingMsg.remove();
+    
+    if (!filters.species) {
+        if (breedChart) breedChart.destroy();
+        
+        const msg = document.createElement('div');
+        msg.className = 'chart-message alert alert-info text-center';
+        msg.innerHTML = `
+            <i class="bi bi-info-circle" style="font-size: 2rem;"></i><br>
+            <strong>Select a Species to View Breeds</strong><br>
+            <small class="text-muted">Choose a species from the filter dropdown above to see the breed distribution chart.</small>
+        `;
+        cardBody.insertBefore(msg, ctx.canvas);
+        return;
+    }
+    
+    // Show loading indicator
+    const loadingMsg = document.createElement('div');
+    loadingMsg.className = 'chart-message alert alert-secondary text-center';
+    loadingMsg.id = 'breedChartLoading';
+    loadingMsg.innerHTML = `
+        <div class="spinner-border spinner-border-sm me-2" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <strong>Loading breed distribution...</strong>
+    `;
+    cardBody.insertBefore(loadingMsg, ctx.canvas);
+    
+    const query = buildQueryString(filters);
+    const url = `/api/charts/breed${query ? '?' + query : ''}`;
+    
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        // Remove loading indicator
+        const loadingMsg = document.getElementById('breedChartLoading');
+        if (loadingMsg) loadingMsg.remove();
+        
+        const ctx = document.getElementById('breedChart').getContext('2d');
+        const canvas = ctx.canvas;
+        canvas.style.display = ''; // Show canvas
+        
+        const cardBody = ctx.canvas.closest('.card-body');
+        
+        // Check if we have data
+        if (!data.labels || data.labels.length === 0 || !data.data || data.data.length === 0) {
+            if (breedChart) breedChart.destroy();
+            
+            const msg = document.createElement('div');
+            msg.className = 'chart-message alert alert-info';
+            msg.innerHTML = `
+                <strong>No Data Available</strong><br>
+                <small>No breed data found for the selected species and filters.</small>
+            `;
+            cardBody.insertBefore(msg, ctx.canvas);
+            return;
+        }
+        
+        if (breedChart) breedChart.destroy();
+        
+        // Ensure canvas is visible (already set above, but ensure it's set)
+        ctx.canvas.style.display = '';
+        
+        breedChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    data: data.data,
+                    backgroundColor: colors.primary.slice(0, data.labels.length),
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        position: 'right'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = ((context.parsed / total) * 100).toFixed(1);
+                                return `${context.label}: ${context.parsed} (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    } catch (error) {
+        removeChartLoading('breedChart');
+        console.error('Error loading breed chart:', error);
+        const ctx = document.getElementById('breedChart').getContext('2d');
+        const cardBody = ctx.canvas.closest('.card-body');
+        const msg = document.createElement('div');
+        msg.className = 'chart-message alert alert-danger';
+        msg.textContent = 'Error loading chart: ' + error.message;
+        cardBody.insertBefore(msg, ctx.canvas);
+    }
+}
+
 // Reset filters
 function resetFilters() {
     document.getElementById('filterSpecies').value = '';
     document.getElementById('filterStatus').value = '';
     document.getElementById('filterGender').value = '';
+    document.getElementById('filterBreed').value = '';
     document.getElementById('filterStartDate').value = '';
     document.getElementById('filterEndDate').value = '';
+    document.getElementById('filterBreed').innerHTML = '<option value="">All Breeds</option>';
     loadCharts();
 }
 
 // Load charts on page load
-loadCharts();
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', loadCharts);
+} else {
+    loadCharts();
+}
 </script>
 {% endblock %}

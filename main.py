@@ -8,10 +8,11 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from contextlib import asynccontextmanager
+from typing import Optional
 import uvicorn
 
 from backend.database.connection import get_database, close_database
-from backend.api.routes import dashboard, animals, adopters, adoptions, medical, volunteers, search, charts
+from backend.api.routes import dashboard, animals, adopters, adoptions, medical, volunteers, search, charts, volunteer_activities
 
 
 @asynccontextmanager
@@ -52,9 +53,9 @@ app.include_router(dashboard.router, tags=["Dashboard"])
 
 # Page routes - use /page suffix to avoid conflicts
 @app.get("/animals", response_class=HTMLResponse, include_in_schema=False)
-async def animals_page_route(request: Request):
+async def animals_page_route(request: Request, status: Optional[str] = None):
     from backend.api.routes.animals import animals_page
-    return await animals_page(request)
+    return await animals_page(request, status=status)
 
 @app.get("/adopters", response_class=HTMLResponse, include_in_schema=False)
 async def adopters_page_route(request: Request):
@@ -76,6 +77,11 @@ async def volunteers_page_route(request: Request):
     from backend.api.routes.volunteers import volunteers_page
     return await volunteers_page(request)
 
+@app.get("/volunteer-activities", response_class=HTMLResponse, include_in_schema=False)
+async def volunteer_activities_page_route(request: Request):
+    from backend.api.routes.volunteer_activities import volunteer_activities_page
+    return await volunteer_activities_page(request)
+
 app.include_router(search.router, prefix="/search", tags=["Search"])
 app.include_router(charts.router, prefix="/charts", tags=["Charts"])
 
@@ -85,6 +91,7 @@ app.include_router(adopters.router, prefix="/api/adopters", tags=["Adopters API"
 app.include_router(adoptions.router, prefix="/api/adoptions", tags=["Adoptions API"])
 app.include_router(medical.router, prefix="/api/medical", tags=["Medical API"])
 app.include_router(volunteers.router, prefix="/api/volunteers", tags=["Volunteers API"])
+app.include_router(volunteer_activities.router, prefix="/api/volunteer-activities", tags=["Volunteer Activities API"])
 app.include_router(search.router, prefix="/api/search", tags=["Search API"])
 app.include_router(charts.router, prefix="/api/charts", tags=["Charts API"])
 

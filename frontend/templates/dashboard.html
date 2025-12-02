@@ -6,7 +6,7 @@
 {% block content %}
 <div class="row mb-4">
     <div class="col-md-3">
-        <div class="card text-white bg-primary">
+        <div class="card text-white bg-primary clickable-card" onclick="window.location.href='/animals'" style="cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.2)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
             <div class="card-body">
                 <h5 class="card-title"><i class="bi bi-heart"></i> Total Animals</h5>
                 <h2>{{ stats.total_animals }}</h2>
@@ -14,7 +14,7 @@
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card text-white bg-success">
+        <div class="card text-white bg-success clickable-card" onclick="window.location.href='/adopters'" style="cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.2)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
             <div class="card-body">
                 <h5 class="card-title"><i class="bi bi-people"></i> Total Adopters</h5>
                 <h2>{{ stats.total_adopters }}</h2>
@@ -22,7 +22,7 @@
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card text-white bg-info">
+        <div class="card text-white bg-info clickable-card" onclick="window.location.href='/adoptions'" style="cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.2)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
             <div class="card-body">
                 <h5 class="card-title"><i class="bi bi-handshake"></i> Total Adoptions</h5>
                 <h2>{{ stats.total_adoptions }}</h2>
@@ -30,7 +30,7 @@
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card text-white bg-warning">
+        <div class="card text-white bg-warning clickable-card" onclick="window.location.href='/volunteers'" style="cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.2)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
             <div class="card-body">
                 <h5 class="card-title"><i class="bi bi-person-badge"></i> Volunteers</h5>
                 <h2>{{ stats.total_volunteers }}</h2>
@@ -41,7 +41,7 @@
 
 <div class="row">
     <div class="col-md-6">
-        <div class="card">
+        <div class="card clickable-card" onclick="window.location.href='/animals?status=Available'" style="cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.2)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
             <div class="card-body">
                 <h5 class="card-title">Available Animals</h5>
                 <h2 class="text-success">{{ stats.available_animals }}</h2>
@@ -49,10 +49,40 @@
         </div>
     </div>
     <div class="col-md-6">
-        <div class="card">
+        <div class="card clickable-card" onclick="window.location.href='/animals?status=Adopted'" style="cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.2)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
             <div class="card-body">
                 <h5 class="card-title">Adopted Animals</h5>
                 <h2 class="text-primary">{{ stats.adopted_animals }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-4">
+        <div class="card clickable-card" onclick="window.location.href='/volunteer-activities'" style="cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.2)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-clock-history"></i> Volunteer Hours</h5>
+                <h2 class="text-info">{{ stats.total_volunteer_hours }}</h2>
+                <small class="text-muted">{{ stats.total_volunteer_activities }} activities logged</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card clickable-card" onclick="window.location.href='/animals?status=Available'" style="cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.2)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-exclamation-triangle"></i> Need Volunteers</h5>
+                <h2 class="text-warning">{{ stats.animals_needing_volunteers }}</h2>
+                <small class="text-muted">Available animals without volunteers</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card clickable-card" onclick="window.location.href='/volunteer-activities'" style="cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.2)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-calendar-check"></i> Activities</h5>
+                <h2 class="text-success">{{ stats.total_volunteer_activities }}</h2>
+                <small class="text-muted">Total logged activities</small>
             </div>
         </div>
     </div>

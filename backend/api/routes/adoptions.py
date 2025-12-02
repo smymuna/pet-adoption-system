@@ -56,11 +56,21 @@ async def create_adoption(adoption: AdoptionCreate):
         raise HTTPException(status_code=500, detail="Database connection failed")
     
     # Validate animal and adopter exist
-    animal = db.animals.find_one({'_id': ObjectId(adoption.animal_id)})
+    try:
+        animal_id_obj = ObjectId(adoption.animal_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid animal ID format")
+    
+    animal = db.animals.find_one({'_id': animal_id_obj})
     if not animal:
         raise HTTPException(status_code=404, detail="Animal not found")
     
-    adopter = db.adopters.find_one({'_id': ObjectId(adoption.adopter_id)})
+    try:
+        adopter_id_obj = ObjectId(adoption.adopter_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid adopter ID format")
+    
+    adopter = db.adopters.find_one({'_id': adopter_id_obj})
     if not adopter:
         raise HTTPException(status_code=404, detail="Adopter not found")
     
@@ -69,7 +79,7 @@ async def create_adoption(adoption: AdoptionCreate):
         adoption_dict['adoption_date'] = datetime.now().strftime('%Y-%m-%d')
     
     # Update animal status
-    db.animals.update_one({'_id': ObjectId(adoption.animal_id)}, {'$set': {'status': 'Adopted'}})
+    db.animals.update_one({'_id': animal_id_obj}, {'$set': {'status': 'Adopted'}})
     
     result = db.adoptions.insert_one(adoption_dict)
     adoption_dict['_id'] = str(result.inserted_id)

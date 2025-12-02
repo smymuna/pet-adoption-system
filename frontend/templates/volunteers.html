@@ -28,7 +28,15 @@
             <td>{{ volunteer.name }}</td>
             <td>{{ volunteer.phone }}</td>
             <td>{{ volunteer.email }}</td>
-            <td>{{ volunteer.skills }}</td>
+            <td>
+                {% if volunteer.skills is iterable and volunteer.skills is not string %}
+                    {% for skill in volunteer.skills %}
+                        <span class="badge bg-secondary me-1">{{ skill }}</span>
+                    {% endfor %}
+                {% else %}
+                    <span class="badge bg-secondary">{{ volunteer.skills }}</span>
+                {% endif %}
+            </td>
             <td>{{ volunteer.availability }}</td>
             <td>
                 <button class="btn btn-sm btn-warning" onclick="editVolunteer('{{ volunteer._id }}')">
@@ -67,7 +75,15 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Skills</label>
-                        <input type="text" class="form-control" name="skills" required>
+                        <div class="form-control" style="max-height: 150px; overflow-y: auto;">
+                            {% for skill in volunteer_skills %}
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="skills" value="{{ skill }}" id="skill_{{ loop.index }}">
+                                <label class="form-check-label" for="skill_{{ loop.index }}">{{ skill }}</label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <small class="form-text text-muted">Select all applicable skills</small>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Availability</label>
@@ -108,7 +124,15 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Skills</label>
-                        <input type="text" class="form-control" name="skills" id="editVolunteerSkills" required>
+                        <div class="form-control" style="max-height: 150px; overflow-y: auto;" id="editVolunteerSkillsContainer">
+                            {% for skill in volunteer_skills %}
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="skills" value="{{ skill }}" id="editSkill_{{ loop.index }}">
+                                <label class="form-check-label" for="editSkill_{{ loop.index }}">{{ skill }}</label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <small class="form-text text-muted">Select all applicable skills</small>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Availability</label>
@@ -130,18 +154,38 @@
 <script>
 async function saveVolunteer() {
     const form = document.getElementById('addVolunteerForm');
-    const formData = Object.fromEntries(new FormData(form));
+    const formData = new FormData(form);
+    
+    // Get selected skills
+    const skills = [];
+    formData.getAll('skills').forEach(skill => {
+        if (skill) skills.push(skill);
+    });
+    
+    if (skills.length === 0) {
+        showAlert('Please select at least one skill', 'warning');
+        return;
+    }
+    
+    const data = {
+        name: formData.get('name'),
+        phone: formData.get('phone'),
+        email: formData.get('email'),
+        skills: skills,
+        availability: formData.get('availability')
+    };
     
     const response = await fetch('/api/volunteers', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(formData)
+        body: JSON.stringify(data)
     });
     
     if (response.ok) {
         location.reload();
     } else {
-        showAlert('Error adding volunteer', 'danger');
+        const error = await response.json();
+        showAlert('Error adding volunteer: ' + (error.detail || 'Unknown error'), 'danger');
     }
 }
 
@@ -153,28 +197,53 @@ async function editVolunteer(id) {
     document.getElementById('editVolunteerName').value = volunteer.name;
     document.getElementById('editVolunteerPhone').value = volunteer.phone;
     document.getElementById('editVolunteerEmail').value = volunteer.email;
-    document.getElementById('editVolunteerSkills').value = volunteer.skills;
     document.getElementById('editVolunteerAvailability').value = volunteer.availability;
+    
+    // Handle skills (could be string or array)
+    const skills = Array.isArray(volunteer.skills) ? volunteer.skills : (volunteer.skills ? [volunteer.skills] : []);
+    const checkboxes = document.querySelectorAll('#editVolunteerSkillsContainer input[type="checkbox"]');
+    checkboxes.forEach(cb => {
+        cb.checked = skills.includes(cb.value);
+    });
     
     new bootstrap.Modal(document.getElementById('editVolunteerModal')).show();
 }
 
 async function updateVolunteer() {
     const form = document.getElementById('editVolunteerForm');
+    const formData = new FormData(form);
     const id = document.getElementById('editVolunteerId').value;
-    const formData = Object.fromEntries(new FormData(form));
-    delete formData.id;
+    
+    // Get selected skills
+    const skills = [];
+    formData.getAll('skills').forEach(skill => {
+        if (skill) skills.push(skill);
+    });
+    
+    if (skills.length === 0) {
+        showAlert('Please select at least one skill', 'warning');
+        return;
+    }
+    
+    const data = {
+        name: formData.get('name'),
+        phone: formData.get('phone'),
+        email: formData.get('email'),
+        skills: skills,
+        availability: formData.get('availability')
+    };
     
     const response = await fetch(`/api/volunteers/${id}`, {
         method: 'PUT',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(formData)
+        body: JSON.stringify(data)
     });
     
     if (response.ok) {
         location.reload();
     } else {
-        showAlert('Error updating volunteer', 'danger');
+        const error = await response.json();
+        showAlert('Error updating volunteer: ' + (error.detail || 'Unknown error'), 'danger');
     }
 }
 
