@@ -42,7 +42,7 @@ async def volunteer_activities_page(request: Request):
     """Render volunteer activities management page"""
     db = get_database()
     if db is None:
-        raise HTTPException(status_code=500, detail="Database connection failed")
+        raise HTTPException(status_code=500, detail="DB error")
     
     activities_list = []
     for activity in db.volunteer_activities.find().sort("activity_date", -1):
@@ -78,7 +78,7 @@ async def get_volunteer_activities(
     """Get all volunteer activities with optional filters"""
     db = get_database()
     if db is None:
-        raise HTTPException(status_code=500, detail="Database connection failed")
+        raise HTTPException(status_code=500, detail="DB error")
     
     filter_dict = {}
     if volunteer_id:
@@ -95,21 +95,23 @@ async def create_volunteer_activity(activity: VolunteerActivityCreate):
     """Create a new volunteer activity"""
     db = get_database()
     if db is None:
-        raise HTTPException(status_code=500, detail="Database connection failed")
+        raise HTTPException(status_code=500, detail="DB error")
     
-    # Validate volunteer and animal exist
+    # Validate IDs first, then check existence
     try:
-        volunteer = db.volunteers.find_one({'_id': ObjectId(activity.volunteer_id)})
-        if not volunteer:
-            raise HTTPException(status_code=404, detail="Volunteer not found")
-        
-        animal = db.animals.find_one({'_id': ObjectId(activity.animal_id)})
-        if not animal:
-            raise HTTPException(status_code=404, detail="Animal not found")
-    except Exception as e:
-        if isinstance(e, HTTPException):
-            raise
-        raise HTTPException(status_code=400, detail="Invalid volunteer or animal ID")
+        volunteer_id_obj = ObjectId(activity.volunteer_id)
+        animal_id_obj = ObjectId(activity.animal_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid ID format")
+    
+    # Check both exist in database
+    volunteer = db.volunteers.find_one({'_id': volunteer_id_obj})
+    if not volunteer:
+        raise HTTPException(status_code=404, detail="Volunteer not found")
+    
+    animal = db.animals.find_one({'_id': animal_id_obj})
+    if not animal:
+        raise HTTPException(status_code=404, detail="Animal not found")
     
     activity_dict = activity.dict()
     result = db.volunteer_activities.insert_one(activity_dict)
@@ -119,10 +121,9 @@ async def create_volunteer_activity(activity: VolunteerActivityCreate):
 
 @router.get("/{activity_id}", response_model=VolunteerActivityResponse)
 async def get_volunteer_activity(activity_id: str = Path(...)):
-    """Get a specific volunteer activity by ID"""
     db = get_database()
     if db is None:
-        raise HTTPException(status_code=500, detail="Database connection failed")
+        raise HTTPException(status_code=500, detail="DB error")
     
     try:
         activity = db.volunteer_activities.find_one({'_id': ObjectId(activity_id)})
@@ -135,10 +136,9 @@ async def get_volunteer_activity(activity_id: str = Path(...)):
 
 @router.put("/{activity_id}", response_model=VolunteerActivityResponse)
 async def update_volunteer_activity(activity_id: str = Path(...), activity: VolunteerActivityUpdate = None):
-    """Update a volunteer activity"""
     db = get_database()
     if db is None:
-        raise HTTPException(status_code=500, detail="Database connection failed")
+        raise HTTPException(status_code=500, detail="DB error")
     
     try:
         update_data = {k: v for k, v in activity.dict().items() if v is not None}
@@ -159,10 +159,10 @@ async def update_volunteer_activity(activity_id: str = Path(...), activity: Volu
 
 @router.delete("/{activity_id}", response_model=SuccessResponse)
 async def delete_volunteer_activity(activity_id: str = Path(...)):
-    """Delete a volunteer activity"""
+    # Allow deletion but might want to keep for reporting later
     db = get_database()
     if db is None:
-        raise HTTPException(status_code=500, detail="Database connection failed")
+        raise HTTPException(status_code=500, detail="DB error")
     
     try:
         result = db.volunteer_activities.delete_one({'_id': ObjectId(activity_id)})
@@ -180,7 +180,7 @@ async def get_volunteer_stats():
     """Get volunteer statistics"""
     db = get_database()
     if db is None:
-        raise HTTPException(status_code=500, detail="Database connection failed")
+        raise HTTPException(status_code=500, detail="DB error")
     
     activities = list(db.volunteer_activities.find())
     

@@ -14,21 +14,21 @@ templates = Jinja2Templates(directory="frontend/templates")
 
 @router.get("/dashboard", response_class=HTMLResponse)
 async def dashboard_page(request: Request):
-    """Render dashboard page with statistics"""
+    """Render dashboard page with real-time statistics"""
     db = get_database()
     if db is None:
-        raise HTTPException(status_code=500, detail="Database connection failed")
+        raise HTTPException(status_code=500, detail="DB connection error")
     
-    # Calculate volunteer statistics
+    # Calculate volunteer stats
     total_activities = db.volunteer_activities.count_documents({})
-    total_hours = 0
+    total_hours = 0.0
     animals_needing_volunteers = 0
     
-    # Calculate total volunteer hours
+    # Sum up all volunteer hours from activities
     for activity in db.volunteer_activities.find():
-        total_hours += activity.get('duration_minutes', 0) / 60
+        total_hours += activity.get('duration_minutes', 0) / 60.0
     
-    # Count animals without assigned volunteers
+    # Find available animals that don't have volunteers assigned
     for animal in db.animals.find({'status': 'Available'}):
         assigned = animal.get('assigned_volunteers', [])
         if not assigned or len(assigned) == 0:

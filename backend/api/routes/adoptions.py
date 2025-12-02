@@ -22,7 +22,7 @@ async def adoptions_page(request: Request):
     """Render adoptions management page"""
     db = get_database()
     if db is None:
-        raise HTTPException(status_code=500, detail="Database connection failed")
+        raise HTTPException(status_code=500, detail="Can't connect to database")
     
     adoptions_list = []
     for adoption in db.adoptions.find():
@@ -42,7 +42,7 @@ async def get_adoptions():
     """Get all adoptions"""
     db = get_database()
     if db is None:
-        raise HTTPException(status_code=500, detail="Database connection failed")
+        raise HTTPException(status_code=500, detail="Can't connect to database")
     
     adoptions_list = [serialize_doc(a) for a in db.adoptions.find()]
     return adoptions_list
@@ -50,12 +50,12 @@ async def get_adoptions():
 
 @router.post("", response_model=AdoptionResponse)
 async def create_adoption(adoption: AdoptionCreate):
-    """Create a new adoption"""
+    """Create a new adoption - automatically updates animal status to 'Adopted'"""
     db = get_database()
     if db is None:
-        raise HTTPException(status_code=500, detail="Database connection failed")
+        raise HTTPException(status_code=500, detail="Can't connect to database")
     
-    # Validate animal and adopter exist
+    # Validate IDs and check existence
     try:
         animal_id_obj = ObjectId(adoption.animal_id)
     except Exception:
@@ -75,10 +75,11 @@ async def create_adoption(adoption: AdoptionCreate):
         raise HTTPException(status_code=404, detail="Adopter not found")
     
     adoption_dict = adoption.dict()
+    # Default to today if no date provided
     if not adoption_dict.get('adoption_date'):
         adoption_dict['adoption_date'] = datetime.now().strftime('%Y-%m-%d')
     
-    # Update animal status
+    # Mark animal as adopted
     db.animals.update_one({'_id': animal_id_obj}, {'$set': {'status': 'Adopted'}})
     
     result = db.adoptions.insert_one(adoption_dict)
@@ -88,10 +89,9 @@ async def create_adoption(adoption: AdoptionCreate):
 
 @router.get("/{adoption_id}", response_model=AdoptionResponse)
 async def get_adoption(adoption_id: str = Path(...)):
-    """Get a specific adoption by ID"""
     db = get_database()
     if db is None:
-        raise HTTPException(status_code=500, detail="Database connection failed")
+        raise HTTPException(status_code=500, detail="Can't connect to database")
     
     try:
         adoption = db.adoptions.find_one({'_id': ObjectId(adoption_id)})
@@ -99,15 +99,14 @@ async def get_adoption(adoption_id: str = Path(...)):
             raise HTTPException(status_code=404, detail="Adoption not found")
         return serialize_doc(adoption)
     except Exception:
-        raise HTTPException(status_code=400, detail="Invalid adoption ID")
+        raise HTTPException(status_code=400, detail="Bad adoption ID")
 
 
 @router.put("/{adoption_id}", response_model=AdoptionResponse)
 async def update_adoption(adoption_id: str = Path(...), adoption: AdoptionUpdate = None):
-    """Update an adoption"""
     db = get_database()
     if db is None:
-        raise HTTPException(status_code=500, detail="Database connection failed")
+        raise HTTPException(status_code=500, detail="Can't connect to database")
     
     try:
         update_data = {k: v for k, v in adoption.dict().items() if v is not None}
@@ -131,7 +130,7 @@ async def delete_adoption(adoption_id: str = Path(...)):
     """Delete an adoption"""
     db = get_database()
     if db is None:
-        raise HTTPException(status_code=500, detail="Database connection failed")
+        raise HTTPException(status_code=500, detail="Can't connect to database")
     
     try:
         adoption = db.adoptions.find_one({'_id': ObjectId(adoption_id)})

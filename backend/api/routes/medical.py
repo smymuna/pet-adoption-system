@@ -21,14 +21,17 @@ async def medical_page(request: Request):
     """Render medical records management page"""
     db = get_database()
     if db is None:
-        raise HTTPException(status_code=500, detail="Database connection failed")
+        raise HTTPException(status_code=500, detail="Database unavailable")
     
     records_list = []
+    # Loop through records and enrich with animal names for display
     for record in db.medical_records.find():
         record_doc = serialize_doc(record)
-        # Get animal details
-        animal = db.animals.find_one({'_id': ObjectId(record['animal_id'])})
-        record_doc['animal_name'] = animal['name'] if animal else 'Unknown'
+        try:
+            animal = db.animals.find_one({'_id': ObjectId(record['animal_id'])})
+            record_doc['animal_name'] = animal.get('name', 'Unknown') if animal else 'Unknown'
+        except (KeyError, TypeError):
+            record_doc['animal_name'] = 'Unknown'
         records_list.append(record_doc)
     
     return templates.TemplateResponse("medical.html", {"request": request, "records": records_list})
@@ -36,10 +39,9 @@ async def medical_page(request: Request):
 
 @router.get("", response_model=List[MedicalRecordResponse])
 async def get_medical_records():
-    """Get all medical records"""
     db = get_database()
     if db is None:
-        raise HTTPException(status_code=500, detail="Database connection failed")
+        raise HTTPException(status_code=500, detail="Database unavailable")
     
     records_list = [serialize_doc(r) for r in db.medical_records.find()]
     return records_list
@@ -47,13 +49,18 @@ async def get_medical_records():
 
 @router.post("", response_model=MedicalRecordResponse)
 async def create_medical_record(record: MedicalRecordCreate):
-    """Create a new medical record"""
+    """Create a new medical record - validates animal exists first"""
     db = get_database()
     if db is None:
-        raise HTTPException(status_code=500, detail="Database connection failed")
+        raise HTTPException(status_code=500, detail="Database unavailable")
     
-    # Validate animal exists
-    animal = db.animals.find_one({'_id': ObjectId(record.animal_id)})
+    # Make sure the animal actually exists before creating record
+    try:
+        animal_id_obj = ObjectId(record.animal_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid animal ID format")
+    
+    animal = db.animals.find_one({'_id': animal_id_obj})
     if not animal:
         raise HTTPException(status_code=404, detail="Animal not found")
     
@@ -65,26 +72,25 @@ async def create_medical_record(record: MedicalRecordCreate):
 
 @router.get("/{record_id}", response_model=MedicalRecordResponse)
 async def get_medical_record(record_id: str = Path(...)):
-    """Get a specific medical record by ID"""
     db = get_database()
     if db is None:
-        raise HTTPException(status_code=500, detail="Database connection failed")
+        raise HTTPException(status_code=500, detail="Database unavailable")
     
     try:
         record = db.medical_records.find_one({'_id': ObjectId(record_id)})
         if not record:
-            raise HTTPException(status_code=404, detail="Medical record not found")
+            raise HTTPException(status_code=404, detail="Record not found")
         return serialize_doc(record)
     except Exception:
-        raise HTTPException(status_code=400, detail="Invalid medical record ID")
+        raise HTTPException(status_code=400, detail="Invalid record ID")
 
 
 @router.put("/{record_id}", response_model=MedicalRecordResponse)
 async def update_medical_record(record_id: str = Path(...), record: MedicalRecordUpdate = None):
-    """Update a medical record"""
+    # Update existing medical record
     db = get_database()
     if db is None:
-        raise HTTPException(status_code=500, detail="Database connection failed")
+        raise HTTPException(status_code=500, detail="Database unavailable")
     
     try:
         update_data = {k: v for k, v in record.dict().items() if v is not None}
@@ -105,10 +111,10 @@ async def update_medical_record(record_id: str = Path(...), record: MedicalRecor
 
 @router.delete("/{record_id}", response_model=SuccessResponse)
 async def delete_medical_record(record_id: str = Path(...)):
-    """Delete a medical record"""
+    # Note: medical records should probably be kept for history, but allowing delete for now
     db = get_database()
     if db is None:
-        raise HTTPException(status_code=500, detail="Database connection failed")
+        raise HTTPException(status_code=500, detail="Database unavailable")
     
     try:
         result = db.medical_records.delete_one({'_id': ObjectId(record_id)})

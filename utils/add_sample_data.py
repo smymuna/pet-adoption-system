@@ -359,18 +359,84 @@ print(f"✅ Added {len(adopter_ids)} adopters")
 print("\n🤝 Adding adoptions...")
 adoptions_count = 0
 adopted_animals = [animal for animal in animals_data if animal["status"] == "Adopted"]
+
+# Define adoption dates spread across multiple months (Aug 2024 to Nov 2025)
+adoption_dates = [
+    # 2024 dates
+    "2024-08-15", "2024-08-22", "2024-08-28",
+    "2024-09-05", "2024-09-12", "2024-09-18", "2024-09-25",
+    "2024-10-03", "2024-10-10", "2024-10-17", "2024-10-24", "2024-10-31",
+    "2024-11-07", "2024-11-14", "2024-11-21", "2024-11-28",
+    "2024-12-05", "2024-12-12", "2024-12-19", "2024-12-26",
+    # 2025 dates
+    "2025-01-08", "2025-01-15", "2025-01-22", "2025-01-29",
+    "2025-02-05", "2025-02-12", "2025-02-19", "2025-02-26",
+    "2025-03-03", "2025-03-10", "2025-03-17", "2025-03-24", "2025-03-31",
+    "2025-04-07", "2025-04-14", "2025-04-21", "2025-04-28",
+    "2025-05-05", "2025-05-12", "2025-05-19", "2025-05-26",
+    "2025-06-02", "2025-06-09", "2025-06-16", "2025-06-23", "2025-06-30",
+    "2025-07-07", "2025-07-14", "2025-07-21", "2025-07-28",
+    "2025-08-04", "2025-08-11", "2025-08-18", "2025-08-25",
+    "2025-09-01", "2025-09-08", "2025-09-15", "2025-09-22", "2025-09-29",
+    "2025-10-06", "2025-10-13", "2025-10-20", "2025-10-27",
+    "2025-11-03", "2025-11-10", "2025-11-17", "2025-11-24"
+]
+
+# Assign adoption dates to adopted animals
 for i, animal_data in enumerate(adopted_animals):
     animal = db.animals.find_one({"name": animal_data["name"]})
     if animal and i < len(adopter_ids):
+        # Use predefined dates, or generate random if we run out
+        if i < len(adoption_dates):
+            adoption_date = adoption_dates[i]
+        else:
+            # Fallback: spread across last 6 months
+            months_ago = random.randint(0, 6)
+            days_ago = random.randint(0, 30)
+            adoption_date = (datetime.now() - timedelta(days=months_ago*30 + days_ago)).strftime('%Y-%m-%d')
+        
         adoption_data = {
             "animal_id": str(animal["_id"]),
-            "adopter_id": str(adopter_ids[i]),
-            "adoption_date": (datetime.now() - timedelta(days=random.randint(7, 60))).strftime('%Y-%m-%d'),
+            "adopter_id": str(adopter_ids[i % len(adopter_ids)]),  # Cycle through adopters
+            "adoption_date": adoption_date,
             "notes": f"Great match! {animal_data['name']} is settling in well."
         }
         db.adoptions.insert_one(adoption_data)
         adoptions_count += 1
-print(f"✅ Added {adoptions_count} adoptions")
+
+# Add more adoptions for available animals (change some to adopted status)
+print("   Adding additional adoptions...")
+additional_adoptions = 0
+available_animals = [animal for animal in animals_data if animal["status"] == "Available"]
+# Adopt more animals to use 2025 dates (need at least 30+ total to reach 2025)
+animals_to_adopt = random.sample(available_animals, min(25, len(available_animals)))
+
+for i, animal_data in enumerate(animals_to_adopt):
+    animal = db.animals.find_one({"name": animal_data["name"]})
+    if animal:
+        # Use remaining adoption dates
+        date_index = adoptions_count + i
+        if date_index < len(adoption_dates):
+            adoption_date = adoption_dates[date_index]
+        else:
+            # Generate date in the past 6 months
+            months_ago = random.randint(0, 6)
+            days_ago = random.randint(0, 30)
+            adoption_date = (datetime.now() - timedelta(days=months_ago*30 + days_ago)).strftime('%Y-%m-%d')
+        
+        adoption_data = {
+            "animal_id": str(animal["_id"]),
+            "adopter_id": str(adopter_ids[(adoptions_count + i) % len(adopter_ids)]),
+            "adoption_date": adoption_date,
+            "notes": f"Great match! {animal_data['name']} is settling in well."
+        }
+        db.adoptions.insert_one(adoption_data)
+        # Update animal status to Adopted
+        db.animals.update_one({"_id": animal["_id"]}, {"$set": {"status": "Adopted"}})
+        additional_adoptions += 1
+
+total_adoptions = adoptions_count + additional_adoptions
+print(f"✅ Added {total_adoptions} adoptions ({adoptions_count} from originally adopted animals, {additional_adoptions} newly adopted)")
 
 # Insert medical records - MULTIPLE RECORDS FOR EACH ANIMAL
 print("\n🏥 Adding medical records for each animal...")
@@ -560,7 +626,7 @@ print("📊 DATA POPULATION SUMMARY")
 print("="*50)
 print(f"🐾 Animals:           {len(animal_ids)}")
 print(f"👥 Adopters:          {len(adopter_ids)}")
-print(f"🤝 Adoptions:         {adoptions_count}")
+print(f"🤝 Adoptions:         {total_adoptions}")
 print(f"🏥 Medical Records:   {medical_records_count}")
 print(f"🙋 Volunteers:        {len(volunteer_ids)}")
 print(f"🔗 Volunteer Assignments: {volunteer_assignments}")

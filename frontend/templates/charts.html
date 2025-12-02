@@ -576,7 +576,15 @@ async function loadAdoptionsChart(filters) {
     const url = `/api/charts/adoptions${query ? '?' + query : ''}`;
     
     try {
-        const response = await fetch(url);
+        const response = await fetch(url, {
+            cache: 'no-cache',
+            headers: {
+                'Cache-Control': 'no-cache'
+            }
+        });
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
         const data = await response.json();
         
         removeChartLoading('adoptionsChart');
@@ -611,11 +619,16 @@ async function loadAdoptionsChart(filters) {
             return;
         }
         
-        if (adoptionsChart) adoptionsChart.destroy();
+        // Destroy existing chart if it exists
+        if (adoptionsChart) {
+            adoptionsChart.destroy();
+            adoptionsChart = null;
+        }
         
         // Ensure canvas is visible
         ctx.canvas.style.display = '';
         
+        // Create new chart with updated data
         adoptionsChart = new Chart(ctx, {
             type: 'line',
             data: {
@@ -634,6 +647,9 @@ async function loadAdoptionsChart(filters) {
             options: {
                 responsive: true,
                 maintainAspectRatio: true,
+                animation: {
+                    duration: 0  // Disable animation to ensure immediate update
+                },
                 scales: {
                     y: {
                         beginAtZero: true,
@@ -773,11 +789,16 @@ async function loadMedicalChart(filters) {
             return;
         }
         
-        if (medicalChart) medicalChart.destroy();
+        // Destroy existing chart if it exists
+        if (medicalChart) {
+            medicalChart.destroy();
+            medicalChart = null;
+        }
         
         // Ensure canvas is visible
         ctx.canvas.style.display = '';
         
+        // Create new chart with updated data
         medicalChart = new Chart(ctx, {
             type: 'line',
             data: {
@@ -796,6 +817,9 @@ async function loadMedicalChart(filters) {
             options: {
                 responsive: true,
                 maintainAspectRatio: true,
+                animation: {
+                    duration: 0  // Disable animation to ensure immediate update
+                },
                 scales: {
                     y: {
                         beginAtZero: true,

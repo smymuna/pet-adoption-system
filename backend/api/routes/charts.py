@@ -20,10 +20,9 @@ templates = Jinja2Templates(directory="frontend/templates")
 
 @router.get("", response_class=HTMLResponse, include_in_schema=False)
 async def charts_page(request: Request):
-    """Render charts page"""
     db = get_database()
     if db is None:
-        raise HTTPException(status_code=500, detail="Database connection failed")
+        raise HTTPException(status_code=500, detail="Can't reach database")
     
     # Get filter options
     species_list = sorted(set(a.get('species', '') for a in db.animals.find() if a.get('species')))
@@ -41,9 +40,10 @@ async def charts_page(request: Request):
 
 def build_animal_filter(species: Optional[str] = None, status: Optional[str] = None, 
                        gender: Optional[str] = None, breed: Optional[str] = None):
-    """Build MongoDB filter for animals based on query parameters"""
+    """Build MongoDB filter dict from query params - only includes non-None values"""
     filter_dict = {}
     
+    # Add filters only if they're provided
     if species:
         filter_dict['species'] = species
     if status:
@@ -98,7 +98,7 @@ async def get_breed_distribution(
     """Get breed distribution for a selected species with optional filters"""
     db = get_database()
     if db is None:
-        raise HTTPException(status_code=500, detail="Database connection failed")
+        raise HTTPException(status_code=500, detail="Can't reach database")
     
     if not species:
         return {
@@ -135,7 +135,7 @@ async def get_species_distribution(
     """Get animal species distribution with optional filters"""
     db = get_database()
     if db is None:
-        raise HTTPException(status_code=500, detail="Database connection failed")
+        raise HTTPException(status_code=500, detail="DB connection error")
     
     filter_dict = build_animal_filter(species=species, status=status, gender=gender, breed=breed)
     
@@ -165,7 +165,7 @@ async def get_status_distribution(
     """Get animal status distribution (Available, Adopted, Medical)"""
     db = get_database()
     if db is None:
-        raise HTTPException(status_code=500, detail="Database connection failed")
+        raise HTTPException(status_code=500, detail="Database unavailable")
     
     filter_dict = build_animal_filter(species=species, status=status, gender=gender, breed=breed)
     
@@ -192,7 +192,7 @@ async def get_age_distribution(
     """Get age distribution grouped into ranges"""
     db = get_database()
     if db is None:
-        raise HTTPException(status_code=500, detail="Database connection failed")
+        raise HTTPException(status_code=500, detail="Connection failed")
     
     filter_dict = build_animal_filter(species=species, status=status, gender=gender, breed=breed)
     
@@ -248,7 +248,7 @@ async def get_monthly_adoptions(
     """
     db = get_database()
     if db is None:
-        raise HTTPException(status_code=500, detail="Database connection failed")
+        raise HTTPException(status_code=500, detail="DB error")
     
     # Build animal filter
     animal_filter = build_animal_filter(species=species, status=status, gender=gender, breed=breed)
@@ -269,8 +269,12 @@ async def get_monthly_adoptions(
     
     for adoption in adoptions:
         # Filter by animal if filters are provided
-        if animal_filter and str(adoption.get('animal_id')) not in matching_animals:
-            continue
+        if animal_filter:
+            adoption_animal_id = adoption.get('animal_id')
+            adoption_animal_id_str = str(adoption_animal_id) if adoption_animal_id else None
+            
+            if not adoption_animal_id_str or adoption_animal_id_str not in matching_animals:
+                continue
         
         adoption_date = adoption.get('adoption_date', '')
         if adoption_date:
@@ -292,8 +296,57 @@ async def get_monthly_adoptions(
                 # Log for debugging
                 print(f"Invalid adoption_date format: {adoption_date}, error: {e}")
     
-    # Sort by month
-    sorted_months = sorted(monthly_count.items())
+    # If date range is provided, generate all months in the range
+    if start_dt or end_dt:
+        # Determine the range
+        if start_dt and end_dt:
+            # Both dates provided - use the range
+            start_year = start_dt.year
+            start_month = start_dt.month
+            end_year = end_dt.year
+            end_month = end_dt.month
+        elif start_dt:
+            # Only start date - go from start to current month
+            start_year = start_dt.year
+            start_month = start_dt.month
+            now = datetime.now()
+            end_year = now.year
+            end_month = now.month
+        else:  # end_dt only
+            # Only end date - go from earliest adoption to end
+            # Find earliest month with data, or use a reasonable default
+            if monthly_count:
+                earliest_month = min(monthly_count.keys())
+                start_year, start_month = map(int, earliest_month.split('-'))
+            else:
+                # No data, use end date as start
+                start_year = end_dt.year
+                start_month = end_dt.month
+            end_year = end_dt.year
+            end_month = end_dt.month
+        
+        # Generate all months from start to end
+        all_months = []
+        year = start_year
+        month = start_month
+        
+        while (year, month) <= (end_year, end_month):
+            month_key = f"{year:04d}-{month:02d}"
+            all_months.append(month_key)
+            # Move to next month
+            month += 1
+            if month > 12:
+                month = 1
+                year += 1
+        
+        # Fill in data for all months (0 if no adoptions)
+        labels = all_months
+        data = [monthly_count.get(month, 0) for month in all_months]
+    else:
+        # No date range - just return months with data
+        sorted_months = sorted(monthly_count.items())
+        labels = [item[0] for item in sorted_months]
+        data = [item[1] for item in sorted_months]
     
     metadata = {
         'total_adoptions': len(adoptions),
@@ -304,8 +357,8 @@ async def get_monthly_adoptions(
     }
     
     return {
-        'labels': [item[0] for item in sorted_months],
-        'data': [item[1] for item in sorted_months],
+        'labels': labels,
+        'data': data,
         'metadata': metadata
     }
 
@@ -320,7 +373,7 @@ async def get_adoption_rate_by_species(
     """Get adoption rate (adopted vs available) by species with optional filters"""
     db = get_database()
     if db is None:
-        raise HTTPException(status_code=500, detail="Database connection failed")
+        raise HTTPException(status_code=500, detail="Can't connect to database")
     
     # Apply filters to animals
     filter_dict = build_animal_filter(species=species, status=status, gender=gender, breed=breed)
@@ -367,7 +420,7 @@ async def get_gender_distribution(
     """Get gender distribution"""
     db = get_database()
     if db is None:
-        raise HTTPException(status_code=500, detail="Database connection failed")
+        raise HTTPException(status_code=500, detail="DB connection error")
     
     filter_dict = build_animal_filter(species=species, status=status, gender=gender, breed=breed)
     
@@ -407,7 +460,7 @@ async def get_medical_visits(
     """
     db = get_database()
     if db is None:
-        raise HTTPException(status_code=500, detail="Database connection failed")
+        raise HTTPException(status_code=500, detail="Database unavailable")
     
     # Build animal filter
     animal_filter = build_animal_filter(species=species, status=status, gender=gender, breed=breed)
@@ -451,8 +504,57 @@ async def get_medical_visits(
                 # Log for debugging
                 print(f"Invalid visit_date format: {visit_date}, error: {e}")
     
-    # Sort by month
-    sorted_months = sorted(monthly_count.items())
+    # If date range is provided, generate all months in the range
+    if start_dt or end_dt:
+        # Determine the range
+        if start_dt and end_dt:
+            # Both dates provided - use the range
+            start_year = start_dt.year
+            start_month = start_dt.month
+            end_year = end_dt.year
+            end_month = end_dt.month
+        elif start_dt:
+            # Only start date - go from start to current month
+            start_year = start_dt.year
+            start_month = start_dt.month
+            now = datetime.now()
+            end_year = now.year
+            end_month = now.month
+        else:  # end_dt only
+            # Only end date - go from earliest visit to end
+            # Find earliest month with data, or use a reasonable default
+            if monthly_count:
+                earliest_month = min(monthly_count.keys())
+                start_year, start_month = map(int, earliest_month.split('-'))
+            else:
+                # No data, use end date as start
+                start_year = end_dt.year
+                start_month = end_dt.month
+            end_year = end_dt.year
+            end_month = end_dt.month
+        
+        # Generate all months from start to end
+        all_months = []
+        year = start_year
+        month = start_month
+        
+        while (year, month) <= (end_year, end_month):
+            month_key = f"{year:04d}-{month:02d}"
+            all_months.append(month_key)
+            # Move to next month
+            month += 1
+            if month > 12:
+                month = 1
+                year += 1
+        
+        # Fill in data for all months (0 if no visits)
+        labels = all_months
+        data = [monthly_count.get(month, 0) for month in all_months]
+    else:
+        # No date range - just return months with data
+        sorted_months = sorted(monthly_count.items())
+        labels = [item[0] for item in sorted_months]
+        data = [item[1] for item in sorted_months]
     
     metadata = {
         'total_records': len(medical_records),
@@ -463,8 +565,8 @@ async def get_medical_visits(
     }
     
     return {
-        'labels': [item[0] for item in sorted_months],
-        'data': [item[1] for item in sorted_months],
+        'labels': labels,
+        'data': data,
         'metadata': metadata
     }
 
@@ -492,7 +594,7 @@ async def get_medical_visits_by_species(
     """
     db = get_database()
     if db is None:
-        raise HTTPException(status_code=500, detail="Database connection failed")
+        raise HTTPException(status_code=500, detail="Connection failed")
     
     # Build animal filter (include species if provided, but we'll still group by all species)
     animal_filter = build_animal_filter(species=species, status=status, gender=gender, breed=breed)
@@ -569,7 +671,7 @@ async def get_medical_visits_by_breed(
     """
     db = get_database()
     if db is None:
-        raise HTTPException(status_code=500, detail="Database connection failed")
+        raise HTTPException(status_code=500, detail="DB error")
     
     if not species:
         return {

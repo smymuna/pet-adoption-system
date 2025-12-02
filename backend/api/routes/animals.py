@@ -26,7 +26,7 @@ async def animals_page(request: Request, status: Optional[str] = None):
     """Render animals management page with optional status filter"""
     db = get_database()
     if db is None:
-        raise HTTPException(status_code=500, detail="Database connection failed")
+        raise HTTPException(status_code=500, detail="DB connection error")
     
     # Validate status parameter
     valid_statuses = ["Available", "Adopted", "Medical"]
@@ -76,7 +76,7 @@ async def get_animals():
     """Get all animals (API endpoint)"""
     db = get_database()
     if db is None:
-        raise HTTPException(status_code=500, detail="Database connection failed")
+        raise HTTPException(status_code=500, detail="DB connection error")
     
     # Filter out incomplete records (missing required fields)
     animals_list = []
@@ -95,10 +95,9 @@ async def get_species_breeds():
 
 @router.post("", response_model=AnimalResponse)
 async def create_animal(animal: AnimalCreate):
-    """Create a new animal"""
     db = get_database()
     if db is None:
-        raise HTTPException(status_code=500, detail="Database connection failed")
+        raise HTTPException(status_code=500, detail="DB connection error")
     
     animal_dict = animal.dict()
     result = db.animals.insert_one(animal_dict)
@@ -108,10 +107,9 @@ async def create_animal(animal: AnimalCreate):
 
 @router.get("/{animal_id}", response_model=AnimalResponse)
 async def get_animal(animal_id: str = Path(...)):
-    """Get a specific animal by ID"""
     db = get_database()
     if db is None:
-        raise HTTPException(status_code=500, detail="Database connection failed")
+        raise HTTPException(status_code=500, detail="DB connection error")
     
     try:
         animal_id_obj = ObjectId(animal_id)
@@ -126,10 +124,10 @@ async def get_animal(animal_id: str = Path(...)):
 
 @router.put("/{animal_id}", response_model=AnimalResponse)
 async def update_animal(animal_id: str = Path(...), animal: AnimalUpdate = None):
-    """Update an animal"""
+    # Update animal info
     db = get_database()
     if db is None:
-        raise HTTPException(status_code=500, detail="Database connection failed")
+        raise HTTPException(status_code=500, detail="DB connection error")
     
     try:
         animal_id_obj = ObjectId(animal_id)
@@ -150,10 +148,10 @@ async def update_animal(animal_id: str = Path(...), animal: AnimalUpdate = None)
 
 @router.delete("/{animal_id}", response_model=SuccessResponse)
 async def delete_animal(animal_id: str = Path(...)):
-    """Delete an animal"""
+    # HACK: should probably check for related adoptions/medical records first
     db = get_database()
     if db is None:
-        raise HTTPException(status_code=500, detail="Database connection failed")
+        raise HTTPException(status_code=500, detail="DB connection error")
     
     try:
         animal_id_obj = ObjectId(animal_id)
@@ -171,7 +169,7 @@ async def assign_volunteer_to_animal(animal_id: str = Path(...), assignment: Vol
     """Assign a volunteer to an animal"""
     db = get_database()
     if db is None:
-        raise HTTPException(status_code=500, detail="Database connection failed")
+        raise HTTPException(status_code=500, detail="DB connection error")
     
     try:
         animal_id_obj = ObjectId(animal_id)
@@ -213,7 +211,7 @@ async def unassign_volunteer_from_animal(animal_id: str = Path(...), volunteer_i
     """Unassign a volunteer from an animal"""
     db = get_database()
     if db is None:
-        raise HTTPException(status_code=500, detail="Database connection failed")
+        raise HTTPException(status_code=500, detail="DB connection error")
     
     try:
         animal_id_obj = ObjectId(animal_id)
@@ -243,7 +241,7 @@ async def get_suggested_volunteers(animal_id: str = Path(...)):
     """Get suggested volunteers for an animal based on skills and species"""
     db = get_database()
     if db is None:
-        raise HTTPException(status_code=500, detail="Database connection failed")
+        raise HTTPException(status_code=500, detail="DB connection error")
     
     try:
         animal_id_obj = ObjectId(animal_id)

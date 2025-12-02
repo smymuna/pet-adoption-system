@@ -22,7 +22,7 @@ async def volunteers_page(request: Request):
     """Render volunteers management page"""
     db = get_database()
     if db is None:
-        raise HTTPException(status_code=500, detail="Database connection failed")
+        raise HTTPException(status_code=500, detail="Connection failed")
     
     volunteers_list = []
     for v in db.volunteers.find():
@@ -43,15 +43,15 @@ async def volunteers_page(request: Request):
 
 @router.get("", response_model=List[VolunteerResponse])
 async def get_volunteers():
-    """Get all volunteers"""
+    """Get all volunteers - handles legacy string skills format"""
     db = get_database()
     if db is None:
-        raise HTTPException(status_code=500, detail="Database connection failed")
+        raise HTTPException(status_code=500, detail="Connection failed")
     
     volunteers_list = []
     for v in db.volunteers.find():
         volunteer_doc = serialize_doc(v)
-        # Convert skills to list if it's a string (backward compatibility)
+        # Handle old data where skills was stored as string instead of list
         if isinstance(volunteer_doc.get('skills'), str):
             volunteer_doc['skills'] = [volunteer_doc['skills']]
         elif volunteer_doc.get('skills') is None:
@@ -62,10 +62,9 @@ async def get_volunteers():
 
 @router.post("", response_model=VolunteerResponse)
 async def create_volunteer(volunteer: VolunteerCreate):
-    """Create a new volunteer"""
     db = get_database()
     if db is None:
-        raise HTTPException(status_code=500, detail="Database connection failed")
+        raise HTTPException(status_code=500, detail="Connection failed")
     
     volunteer_dict = volunteer.dict()
     result = db.volunteers.insert_one(volunteer_dict)
@@ -75,10 +74,9 @@ async def create_volunteer(volunteer: VolunteerCreate):
 
 @router.get("/{volunteer_id}", response_model=VolunteerResponse)
 async def get_volunteer(volunteer_id: str = Path(...)):
-    """Get a specific volunteer by ID"""
     db = get_database()
     if db is None:
-        raise HTTPException(status_code=500, detail="Database connection failed")
+        raise HTTPException(status_code=500, detail="Connection failed")
     
     try:
         volunteer = db.volunteers.find_one({'_id': ObjectId(volunteer_id)})
@@ -86,15 +84,14 @@ async def get_volunteer(volunteer_id: str = Path(...)):
             raise HTTPException(status_code=404, detail="Volunteer not found")
         return serialize_doc(volunteer)
     except Exception:
-        raise HTTPException(status_code=400, detail="Invalid volunteer ID")
+        raise HTTPException(status_code=400, detail="Bad volunteer ID")
 
 
 @router.put("/{volunteer_id}", response_model=VolunteerResponse)
 async def update_volunteer(volunteer_id: str = Path(...), volunteer: VolunteerUpdate = None):
-    """Update a volunteer"""
     db = get_database()
     if db is None:
-        raise HTTPException(status_code=500, detail="Database connection failed")
+        raise HTTPException(status_code=500, detail="Connection failed")
     
     try:
         update_data = {k: v for k, v in volunteer.dict().items() if v is not None}
@@ -118,7 +115,7 @@ async def delete_volunteer(volunteer_id: str = Path(...)):
     """Delete a volunteer"""
     db = get_database()
     if db is None:
-        raise HTTPException(status_code=500, detail="Database connection failed")
+        raise HTTPException(status_code=500, detail="Connection failed")
     
     try:
         result = db.volunteers.delete_one({'_id': ObjectId(volunteer_id)})
